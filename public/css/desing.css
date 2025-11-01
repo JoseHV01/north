@@ -1,0 +1,135 @@
+.button-aside-accordion{
+    color:#2A3547 !important
+}
+
+.button-aside-accordion:hover{
+    color: #5D87FF !important;
+}
+
+.box-details-bills{
+    min-width: 4rem;
+    min-height:1.7rem;
+    border: 1px rgb(93, 135, 255) solid;
+}
+
+.border-box-detail{
+    min-width: 3rem;
+    border-bottom: 1px rgb(93, 135, 255) solid;
+}
+
+.container-table {
+    max-height: 140px;
+    overflow-y: scroll;
+}
+
+.container-scroll{
+    max-height: 22rem;
+    overflow-y: scroll;
+}
+
+.scroll{
+    height: auto;
+}
+
+.container-scroll::-webkit-scrollbar, .container-table::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.container-scroll::-webkit-scrollbar:vertical, .container-table::-webkit-scrollbar:vertical {
+    width:10px;
+}
+
+.container-scroll::-webkit-scrollbar-button:increment, .container-scroll::-webkit-scrollbar-button, .container-table::-webkit-scrollbar-button:increment, .container-table::-webkit-scrollbar-button {
+    display: none;
+}
+
+.container-scroll::-webkit-scrollbar:horizontal, .container-table::-webkit-scrollbar:horizontal {
+    height: 10px;
+}
+
+.container-scroll::-webkit-scrollbar-thumb, .container-table::-webkit-scrollbar-thumb {
+    background-color: #797979;
+    border-radius: 20px;
+    border: 2px solid #f1f2f3;
+}
+
+.container-scroll::-webkit-scrollbar-track, .container-table::-webkit-scrollbar-track {
+    border-radius: 10px;
+}
+
+.negative-margin-right{
+    margin-right: -9rem;
+}
+
+@media screen and (max-width: 767px) {
+    .negative-margin-right{
+        margin-right: 0rem;
+    }
+
+    .btn-responsive{
+        width: 100% !important;
+    }
+}
+
+.container-loader{
+    background: #4a64936b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: auto;
+    padding: 3rem 1rem;
+    flex-direction: column;
+    gap: 15px;
+    opacity: 30;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-block;
+    border-top: 3px solid #FFF;
+    border-right: 3px solid transparent;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+.title{
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: sans-serif;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+label[class="error"]{
+    color: red;
+    font-size: 12px;
+    font-weight: 500;
+    display: inherit;
+    margin-top: 3px;
+}
+
+.container-chart{
+    height: 75vh;
+    border: 1px solid #80808087;
+    border-radius: 10px;
+    padding: 0rem 1.2rem;
+}
+
+.table-stock>:not(caption)>*>*{
+    padding: 6px 16px !important;
+
+    p{
+        margin-bottom: 0px !important;
+    }
+}

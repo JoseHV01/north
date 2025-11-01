@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>North | @yield('title')</title>
-  <link rel="shortcut icon" type="image/png" href="{{ asset('images/logos/favicon.png') }}"/>
+  <link rel="shortcut icon" type="image/png" href="https://north-production.up.railway.app/images/logos/favicon.png"/>
   <link rel="stylesheet" href="{{ asset('css/styles.min.css') }}"/>
   <link rel="stylesheet" href="{{ asset('css/desing.css') }}"/>
   <link rel="stylesheet" href="{{ asset('import/alertifyjs/css/alertify.css') }}">

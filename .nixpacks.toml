@@ -1,2 +1,14 @@
 [phases.setup]
-nixPkgs = ["php81", "php81Extensions.zip", "php81Extensions.pdo_mysql", "php81Extensions.mbstring", "php81Extensions.xml", "php81Extensions.curl"]
+nixPkgs = [
+  "php82",
+  "php82Packages.composer",
+  "php82Extensions.zip",
+  "php82Extensions.pdo_mysql",
+  "php82Extensions.mbstring",
+  "php82Extensions.tokenizer",
+  "php82Extensions.xml",
+  "php82Extensions.curl",
+  "php82Extensions.fileinfo",
+  "php82Extensions.bcmath",
+  "php82Extensions.redis"
+]

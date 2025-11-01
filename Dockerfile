@@ -1,30 +1,28 @@
-# ---- Etapa base con PHP 8.2 y Composer ----
-FROM php:8.2-fpm
+# Usa PHP 8.2 con CLI (suficiente para Laravel)
+FROM php:8.2-cli
 
-# Instalar dependencias del sistema y extensiones PHP necesarias
+# Instala dependencias del sistema y extensiones requeridas por Laravel y spatie/laravel-backup
 RUN apt-get update && apt-get install -y \
-    git curl unzip zip libzip-dev libpng-dev libonig-dev libxml2-dev libssl-dev libicu-dev \
-    && docker-php-ext-install zip pdo_mysql bcmath intl
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev zip curl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Instalar Composer desde la imagen oficial
+# Instala Composer globalmente desde la imagen oficial
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Establecer el directorio de trabajo
-WORKDIR /var/www
+# Define el directorio de trabajo dentro del contenedor
+WORKDIR /var/www/html
 
-# Copiar todos los archivos del proyecto
+# Copia los archivos del proyecto Laravel al contenedor
 COPY . .
 
-# Instalar dependencias PHP (sin interacción)
-RUN composer install --optimize-autoloader --no-scripts --no-interaction
+# Instala dependencias PHP (sin scripts automáticos ni dependencias dev)
+RUN composer install --optimize-autoloader --no-interaction --no-scripts --no-dev
 
-# Optimizar Laravel (rutas, configuración, vistas)
-RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache || true
+# Limpia y prepara el caché de Laravel (ignora si falla por falta de .env)
+RUN php artisan config:clear || true
 
-# Exponer el puerto usado por php-fpm
-EXPOSE 9000
+# Expone un puerto (Railway usará su propio puerto dinámico)
+EXPOSE 8080
 
-# Iniciar el servicio PHP-FPM
-CMD ["php-fpm"]
+# Comando de inicio: Laravel escuchando en el puerto que Railway asigna
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}

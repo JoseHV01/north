@@ -11,16 +11,7 @@ class CustomersController extends Controller
 {
     public function index()
     {
-        $customers = DB::table('customers')
-        ->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')
-        ->orderBy('customers.status', 'DESC')
-        ->orderBy('customers.business_name', 'ASC')
-        ->select('customers.*', 'document_types.name as document_type', 'document_types.id as id_document_type')
-        ->paginate(10);
-
-        $document_types = DB::table('document_types')->orderBy('name', 'ASC')->get();
-
-        return view('pages/customers')->with('customers', $customers)->with('document_types', $document_types);
+        return redirect('providers');
     }
 
     public function store(CustomersRequest $request)
@@ -41,9 +32,8 @@ class CustomersController extends Controller
           DB::commit();
           return redirect()->back()->with('success', "Cliente agregado");
       } catch (\Throwable $th) {
-          return $th;
           DB::rollback();
-          return back()->withErrors(['error'=>"Ha ocurrido un error, vuelve a intentar"]);
+          return back()->withErrors(['error' => $th->getMessage()]);
       }
     }
 
@@ -65,9 +55,8 @@ class CustomersController extends Controller
           DB::commit();
           return redirect()->back()->with('success', "Cliente editado");
       } catch (\Throwable $th) {
-          return $th;
           DB::rollback();
-          return back()->withErrors(['error'=>"Ha ocurrido un error, vuelve a intentar"]);
+          return back()->withErrors(['error' => $th->getMessage()]);
       }
     }
 
@@ -80,7 +69,7 @@ class CustomersController extends Controller
           return redirect()->back()->with('success', "Cliente eliminado");
       } catch (\Throwable $th) {
           DB::rollback();
-        return back()->withErrors(['error'=>"Ha ocurrido un error, vuelve a intentar"]);
+          return back()->withErrors(['error' => $th->getMessage()]);
       }
     }
 

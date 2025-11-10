@@ -17,7 +17,7 @@
 
 					<div class="col-12 col-md-6">
 						<label for="inputRif" class="form-label">RIF</label>
-						<input name="rif" type="text" class="form-control" id="inputRif" required value="{{ old('rif') ?? $data_company->rif }}">
+						<input name="rif" type="text" class="form-control" id="inputRif" required value="{{ old('rif') ?? $data_company->rif }}" minlength="10" maxlength="12">
 						<p class="text-danger small d-none" id="errorRif">complete el RIF con un formato valido y una longitud de 10 a 11 caracteres</p><!--V-27890234-0 -->
 					</div>
 				</div>

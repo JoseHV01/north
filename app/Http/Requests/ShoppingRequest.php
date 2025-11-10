@@ -26,7 +26,7 @@ class ShoppingRequest extends FormRequest
             'price' => 'required|array',
             'price.*' => "numeric|min:1",
             'percentaje' => 'required|array',
-            'percentaje.*' => "numeric|min:1",
+            'percentaje.*' => "numeric|min:1|max:99",
             'date' => "required|date",
             "totalShopping" => "required|numeric|min:1",
             "invoiceNumber" => "required|numeric|min:1",

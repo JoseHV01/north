@@ -11,7 +11,25 @@ class CompanyController extends Controller
 {
     public function index()
     {
-        return view('pages/company')->with('data_company', DB::table('company')->orderBy('created_at', 'DESC')->first());
+        $data_company = DB::table('company')->orderBy('created_at', 'DESC')->first();
+
+        if (!$data_company) {
+            $data_company = (object)[
+                'name_bussines' => null,
+                'name' => null,
+                'rif' => null,
+                'direction' => null,
+                'phone' => null,
+                'email' => null,
+                'created_at' => null,
+            ];
+        } else {
+            if (!property_exists($data_company, 'name_bussines')) {
+                $data_company->name_bussines = $data_company->name ?? null;
+            }
+        }
+
+        return view('pages/company')->with('data_company', $data_company);
     }
 
     public function store(CompanyRequest $request)

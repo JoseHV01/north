@@ -29,6 +29,7 @@ class AuthenticateController extends Controller
                 $this->queryDollar();
 				$this->queryProductsOutOfStock();
                 $this->getPermissions();
+                $this->verifyDataCompany();
 
                 if(count(Cache::get('permissions')) == 0){
                     $this->logout();
@@ -90,6 +91,26 @@ class AuthenticateController extends Controller
         }
 
 		return Cache::forever('permissions', $arrayPermission);
+    }
+
+    private function verifyDataCompany()
+    {
+        $exists = DB::table('company')->exists();
+        if ($exists) {
+            return true;
+        }
+
+        DB::table('company')->insert([
+            'name' => 'Centro de Copiado Integral',
+            'rif' => 'V-27890234-0',
+            'direction' => 'Calle Hurtado Ascanio, Edif, San Judas Tadeo, Piso PB, Local 1 Sector El Cumbito - Altagracia de Orituco - Estado Guarico',
+            'phone' => '04243450001',
+            'email' => 'centrodecopiadoaltagracia@gmail.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return true;
     }
 
     public function logout(){

@@ -9,7 +9,7 @@
                     <div class="card-header tab-card-header">
                         <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link" id="one-tab" data-toggle="tab" href="#one" role="tab" aria-controls="One"
+                                <a class="nav-link active" id="one-tab" data-toggle="tab" href="#one" role="tab" aria-controls="One"
                                     aria-selected="true">Cliente</a>
                             </li>
                             <li class="nav-item">
@@ -28,7 +28,7 @@
                                     @include('pages.modals.providers.inputAddProvider')
                                     <div class="col-12 mb-3 mb-md-3">
                                         <div class="form-group form-check">
-                                            <input type="checkbox" value="1" required class="form-check-input" id="inputRetentionAgent" name="retention_agent">
+                                            <input type="checkbox" value="1" class="form-check-input" id="inputRetentionAgent" name="retention_agent">
                                             <label class="form-check-label" for="inputRetentionAgent" name="retention_agent">Agente de Retencion</label>
                                         </div>
                                     </div>

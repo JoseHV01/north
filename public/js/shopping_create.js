@@ -1,6 +1,8 @@
 (() => {
     // Variables encapsuladas
-    let optionSelected = document.querySelectorAll(".shape-payment-checkbox:checked").length;
+    let optionSelected = document.querySelectorAll(
+        ".shape-payment-checkbox:checked"
+    ).length;
     const optionCustomer = document.getElementById("selectCustomer");
     const optionStates = document.getElementById("selectStates");
     const selectCategory = document.getElementById("selectCategory");
@@ -98,8 +100,10 @@
     }
 
     function evaluateValueSelects() {
-        optionSelected = document.querySelectorAll(".shape-payment-checkbox:checked").length;
-        
+        optionSelected = document.querySelectorAll(
+            ".shape-payment-checkbox:checked"
+        ).length;
+
         if (
             optionSelected > 0 &&
             optionStates.value != 0 &&
@@ -111,19 +115,31 @@
         ) {
             if (optionSelected > 1) {
                 console.log("dentro del if");
-                const totalBs = parseFloat(document.getElementById("shopping_total").value) || 0;
+                const totalBs =
+                    parseFloat(
+                        document.getElementById("shopping_total").value
+                    ) || 0;
                 let sumBs = 0;
 
-                document.querySelectorAll('#shapePaymentAmounts input').forEach(input => {
-                    const value = parseFloat(input.value) || 0;
-                    const label = input.closest('.form-group').querySelector('label').textContent.toLowerCase();
+                document
+                    .querySelectorAll("#shapePaymentAmounts input")
+                    .forEach(input => {
+                        const value = parseFloat(input.value) || 0;
+                        const label = input
+                            .closest(".form-group")
+                            .querySelector("label")
+                            .textContent.toLowerCase();
 
-                    if (label.includes('divisas') || label.includes('dolares') || label.includes('usd')) {
-                        sumBs += value * dollarRate;
-                    } else {
-                        sumBs += value;
-                    }
-                });
+                        if (
+                            label.includes("divisas") ||
+                            label.includes("dolares") ||
+                            label.includes("usd")
+                        ) {
+                            sumBs += value * dollarRate;
+                        } else {
+                            sumBs += value;
+                        }
+                    });
 
                 const totalInput = document.getElementById("shopping_total");
                 if (Math.abs(sumBs - totalBs) > 0.01) {
@@ -140,7 +156,6 @@
                 inputSearchProduct.disabled = false;
                 btnSearch.disabled = false;
             }
-            
         }
     }
 
@@ -211,7 +226,7 @@
             <td>${description}</td>
             <td><input id="quantity${id}" name="quantity[]" type="number" class="form-control" min="1" value="1" style="min-width: 4rem;" required><input name="product_id[]" class="d-none" type="number" value="${id}"></td>
             <td><input id="quantity${id}" name="price[]" type="number" class="form-control" min="1" value="1" style="min-width: 3rem;" required></td>
-            <td><input id="percentaje${id}" name="percentaje[]" type="number" class="form-control" min="1" value="${ganance}" style="min-width: 5rem;" required></td>
+            <td><input id="percentaje${id}" name="percentaje[]" type="number" class="form-control" min="1" value="1" max="99" style="min-width: 5rem;" required></td>
             <td><button type="button" class="btn btn-danger m-1" data-toggle="tooltip" title="Descartar" onclick="removeProductOfList(${id})"><span><i class="ti ti-trash"></i></span></button></td>`;
         bodyTable.appendChild(tr);
         document
@@ -234,34 +249,37 @@
         toggleProductBtn(idProduct, false);
     };
 
-	function updateShapePaymentInputs() {
-		const checked = Array.from(document.querySelectorAll('.shape-payment-checkbox:checked'));
-		const container = document.getElementById("shapePaymentAmounts");
-		const hiddenInput = document.getElementById("shapePaymentHidden");
-		container.innerHTML = "";
-		hiddenInput.value = checked.map(cb => cb.value).join(',');
-		if (checked.length > 1) {
+    function updateShapePaymentInputs() {
+        const checked = Array.from(
+            document.querySelectorAll(".shape-payment-checkbox:checked")
+        );
+        const container = document.getElementById("shapePaymentAmounts");
+        const hiddenInput = document.getElementById("shapePaymentHidden");
+        container.innerHTML = "";
+        hiddenInput.value = checked.map(cb => cb.value).join(",");
+        if (checked.length > 1) {
             container.classList = "mt-4 mb-5 row";
-			checked.forEach(cb => {
-				const paymentName = shapesPayments.find(sp => sp.id == cb.value)?.name || cb.parentNode.textContent.trim();
-				const inputDiv = document.createElement("div");
-				inputDiv.className = "col-12 col-md-4";
-				inputDiv.innerHTML = `
+            checked.forEach(cb => {
+                const paymentName =
+                    shapesPayments.find(sp => sp.id == cb.value)?.name ||
+                    cb.parentNode.textContent.trim();
+                const inputDiv = document.createElement("div");
+                inputDiv.className = "col-12 col-md-4";
+                inputDiv.innerHTML = `
 					<div class="form-group">
 						<label class="form-label">${paymentName} - Monto</label>
 						<input type="number" name="amounts[${cb.value}]" class="form-control" min="1" required onkeyup="evaluateValueSelects()">
 					</div>`;
-				container.appendChild(inputDiv);
-			});
-		} else {
+                container.appendChild(inputDiv);
+            });
+        } else {
             container.classList = "d-none";
         }
-	}
+    }
 
-	document.addEventListener('DOMContentLoaded', function() {
-		document.querySelectorAll('.shape-payment-checkbox').forEach(cb => {
-			cb.addEventListener('change', updateShapePaymentInputs);
-		});
-	});
-    
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".shape-payment-checkbox").forEach(cb => {
+            cb.addEventListener("change", updateShapePaymentInputs);
+        });
+    });
 })();

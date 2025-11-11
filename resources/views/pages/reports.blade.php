@@ -65,7 +65,7 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h4 class="card-title fw-semibold mb-3">Compras realizadas</h4>
-                                        <p class="card-text h5">{{ $totalTransaction[0] }}</p>
+                                        <p class="card-text h5">{{ $totalTransaction[1] }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h4 class="card-title fw-semibold mb-3">Ventas concretadas</h4>
-                                        <p class="card-text h5">{{ $totalTransaction[1] }}</p>
+                                        <p class="card-text h5">{{ $totalTransaction[0] }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -337,7 +337,7 @@
                     `;
                 }
             }).catch(err => {
-                console.error("ERROR: ", err.message);
+                console.error("ERROR: ", err);
             });
         }
 

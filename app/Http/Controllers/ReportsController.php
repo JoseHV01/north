@@ -9,6 +9,7 @@ class ReportsController extends Controller
 {
     public function index()
     {
+        // return $this->calculateTransactionsTotal();
         return view('pages/reports')->with('valueTotalProducts', $this->calculateValueTotalProducts())->with('valueTotalGanance', $this->calculateValueGanance())->with('totalTransaction', $this->calculateTransactionsTotal())->with('queryDates', $this->queryDateTable())->with('queryDatesDistribution', $this->queryDistributionTransaction())->with('queryDatesOperations', $this->queryDistributionTransaction());
     }
 
@@ -108,7 +109,7 @@ class ReportsController extends Controller
             DB::raw("count(products.id) as total"),
             DB::raw("DATE_FORMAT(purchases_invoices.created_at, '%m') as month"),
         )
-        ->orderBy('purchases_invoices.created_at', 'ASC')
+        ->orderByRaw("DATE_FORMAT(purchases_invoices.created_at, '%m') ASC")
         ->groupBy('month')
         ->where('purchases_invoices.status', 0)
         ->whereYear('purchases_invoices.created_at', $year)
@@ -121,7 +122,7 @@ class ReportsController extends Controller
             DB::raw("count(products.id) as total"),
             DB::raw("DATE_FORMAT(sales_invoices.created_at, '%m') as month"),
         )
-        ->orderBy('sales_invoices.created_at', 'ASC')
+        ->orderByRaw("DATE_FORMAT(sales_invoices.created_at, '%m') ASC")
         ->groupBy('month')
         ->where('sales_invoices.status', 0)
         ->whereYear('sales_invoices.created_at', $year)
@@ -204,16 +205,43 @@ class ReportsController extends Controller
     }
 
     public function queryDistributionTransactionAll($table_name, $column_name, $year, $month){
+        // Algunos esquemas almacenan la relación de forma de pago en una tabla
+        // intermedia (sales_invoices_shapes_payment / purchases_invoice_shapes_payment)
+        // mientras que otros pueden tener la FK directamente en la tabla principal.
+        // Construimos la consulta según el nombre de la tabla para evitar joins
+        // sobre columnas inexistentes.
+        if ($table_name === 'sales_invoices') {
+            return DB::table('shapes_payment')
+                ->join('sales_invoices_shapes_payment as sisp', 'sisp.id_shape_payment', '=', 'shapes_payment.id')
+                ->join('sales_invoices', 'sales_invoices.id', '=', 'sisp.id_sales_invoice')
+                ->select(DB::raw("count(shapes_payment.id) as total"), 'name')
+                ->whereMonth('sales_invoices.created_at', $month)
+                ->whereYear('sales_invoices.created_at', $year)
+                ->groupBy('name')
+                ->orderBy('name', 'ASC')
+                ->get();
+        }
+
+        if ($table_name === 'purchases_invoices') {
+            return DB::table('shapes_payment')
+                ->join('purchases_invoice_shapes_payment as pisp', 'pisp.id_shape_payment', '=', 'shapes_payment.id')
+                ->join('purchases_invoices', 'purchases_invoices.id', '=', 'pisp.id_purchase_invoice')
+                ->select(DB::raw("count(shapes_payment.id) as total"), 'name')
+                ->whereMonth('purchases_invoices.created_at', $month)
+                ->whereYear('purchases_invoices.created_at', $year)
+                ->groupBy('name')
+                ->orderBy('name', 'ASC')
+                ->get();
+        }
+
+        // Fallback: intentar join directo con la columna indicada
         return DB::table('shapes_payment')
-        ->join($table_name, "$table_name.$column_name", 'shapes_payment.id')
-        ->select(
-            DB::raw("count(shapes_payment.id) as total"),
-            'name'
-        )
-        ->orderBy('name', 'ASC')
-        ->groupBy('name')
-        ->whereMonth("$table_name.created_at", $month)
-        ->whereYear("$table_name.created_at", $year)
-        ->get();
+            ->join($table_name, "$table_name.$column_name", '=', 'shapes_payment.id')
+            ->select(DB::raw("count(shapes_payment.id) as total"), 'name')
+            ->whereMonth("$table_name.created_at", $month)
+            ->whereYear("$table_name.created_at", $year)
+            ->groupBy('name')
+            ->orderBy('name', 'ASC')
+            ->get();
     }
 }

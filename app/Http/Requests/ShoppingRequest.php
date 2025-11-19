@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ShoppingRequest extends FormRequest
 {
@@ -24,14 +25,68 @@ class ShoppingRequest extends FormRequest
             'product_id' => 'required|array',
             'product_id.*' => "numeric|exists:products,id",
             'price' => 'required|array',
-            'price.*' => "numeric|min:1",
+            'price.*' => "numeric|min:0.1",
             'percentaje' => 'required|array',
             'percentaje.*' => "numeric|min:1|max:99",
             'date' => "required|date",
-            "totalShopping" => "required|numeric|min:1",
+            "totalShopping" => "required|numeric|min:0.1",
+            'amounts' => 'required|array',
+            'amounts.*' => 'numeric|min:0.01',
             "invoiceNumber" => "required|numeric|min:1",
-            "controlNumber" => "required|numeric|min:1"
+            "controlNumber" => "required|numeric|min:1",
+            "dollarRate" => "required|numeric|min:0.01"
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // ensure amounts exist for each selected shape_payment
+            $shapePayments = $this->input('shape_payment', []);
+            $amounts = $this->input('amounts', []);
+
+            foreach ($shapePayments as $sp) {
+                if (!isset($amounts[$sp]) && !isset($amounts[(string)$sp])) {
+                    $validator->errors()->add('amounts', "Debe ingresar un monto para la forma de pago seleccionada (ID: {$sp}).");
+                }
+            }
+
+            // fetch shapes names
+            $shapes = collect([]);
+            if (!empty($shapePayments)) {
+                $shapes = collect(DB::table('shapes_payment')->whereIn('id', $shapePayments)->pluck('name', 'id'));
+            }
+
+            // get dollar rate from form input
+            $rate = floatval($this->input('dollarRate', 0));
+
+            $sumUSD = 0.0;
+            $hasNonDivisas = false;
+
+            foreach ($amounts as $shapeId => $amount) {
+                $sid = intval($shapeId);
+                $amount = floatval($amount);
+                $shapeName = strtolower(trim((string)($shapes->get($sid) ?? '')));
+                if ($shapeName !== 'divisas') {
+                    $hasNonDivisas = true;
+                    if ($rate <= 0) {
+                        $validator->errors()->add('amounts', 'No hay tasa de cambio disponible para convertir montos a USD.');
+                        // stop further processing
+                        return;
+                    }
+                    // convert local currency to USD
+                    $sumUSD += $amount / $rate;
+                } else {
+                    // already USD
+                    $sumUSD += $amount;
+                }
+            }
+
+            $total = floatval($this->input('totalShopping', 0));
+            if (abs($sumUSD - $total) > 0.01) {
+                $validator->errors()->add('amounts', 'La suma (en USD) de los montos de pago no coincide con el total de la compra.');
+            }
+        });
     }
 
     public function messages()
@@ -55,13 +110,20 @@ class ShoppingRequest extends FormRequest
             'date.date' => "Debe ingresar una fecha valida",
             'totalShopping.required'=> 'El total de la compra es requerido',
             'totalShopping.numeric'=> 'El total de la compra debe ser un numero',
-            'totalShopping.min'=> 'El total de la compra debe ser por lo minimo 1',
+            'totalShopping.min'=> 'El total de la compra debe ser por lo minimo 0.1',
+            'amounts.required' => 'Debe indicar los montos para las formas de pago seleccionadas',
+            'amounts.array' => 'Los montos de pago deben enviarse en un arreglo',
+            'amounts.*.numeric' => 'Cada monto de pago debe ser un numero valido',
+            'amounts.*.min' => 'Cada monto de pago debe ser al menos 0.01',
             'invoiceNumber.required'=> 'El numero de la factura es requerido',
             'invoiceNumber.numeric'=> 'El numero de la factura debe ser un numero',
             'invoiceNumber.min'=> 'El numero de la factura debe ser por lo minimo 1',
             'controlNumber.required'=> 'El numero de control es requerido',
             'controlNumber.numeric'=> 'El numero de control debe ser un numero',
             'controlNumber.min'=> 'El numero de control debe ser por lo minimo 1',
+            'dollarRate.required'=> 'El precio del dólar es requerido',
+            'dollarRate.numeric'=> 'El precio del dólar debe ser un numero',
+            'dollarRate.min'=> 'El precio del dólar debe ser por lo minimo 0.01',
         ];
     }
 }

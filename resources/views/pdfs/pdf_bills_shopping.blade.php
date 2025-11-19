@@ -154,8 +154,8 @@
                 <tr>
                     <th style="width: 50%;">Descripción</th>
                     <th style="width: 15%;">Cantidad</th>
-                    <th style="width: 15%;">Precio Unitario</th>
-                    <th style="width: 20%;">Total</th>
+                    <th style="width: 15%;">Precio Unitario (Bs)</th>
+                    <th style="width: 20%;">Total (Bs)</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,8 +163,8 @@
                     <tr>
                         <td style="text-align: left;">{{ $product->description }}</td>
                         <td>{{ number_format($product->amount, 2) }}</td>
-                        <td>{{ number_format($product->price, 2) }}</td>
-                        <td>{{ number_format($product->amount * $product->price, 2) }}</td>
+                        <td>{{ number_format($product->price * $data[4], 2) }} Bs</td>
+                        <td>{{ number_format($product->amount * $product->price * $data[4], 2) }} Bs</td>
                     </tr>
                 @endforeach
             </tbody>

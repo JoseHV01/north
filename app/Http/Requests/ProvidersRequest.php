@@ -21,7 +21,7 @@ class ProvidersRequest extends FormRequest
 
         return [
             'type_document' => 'required|exists:document_types,id',
-            'document' => ['required', 'numeric', 'digits_between:10,12', $id ? Rule::unique('providers')->where('id_document_type', $this->type_document)->ignore($id) : Rule::unique('providers')->where('id_document_type', $this->type_document)],
+            'document' => ['required', 'numeric', 'digits_between:8,12', $id ? Rule::unique('providers')->where('id_document_type', $this->type_document)->ignore($id) : Rule::unique('providers')->where('id_document_type', $this->type_document)],
             'business_name' => ['required', 'min:1', 'max:200', $id ? Rule::unique('providers')->ignore($id) : Rule::unique('providers')],
             'phone' => ['nullable', 'numeric', 'digits_between:10,12', /*'max:12',*/ $id ? Rule::unique('providers')->ignore($id) : Rule::unique('providers')],
             'email' => ['nullable', 'email', 'min:10', 'max:100', $id ? Rule::unique('providers')->ignore($id) : Rule::unique('providers')],
@@ -38,9 +38,9 @@ class ProvidersRequest extends FormRequest
             'document.required' => 'El documento es requerido',
             'document.unique' => 'El documento ingresado ya esta registrado',
             'document.numeric' => 'El documento solo puede contener numeros',
-            'document.min' => 'El documento debe tener minimo 7 caracteres de longitud',
-            'document.max' => 'El documento debe tener maximo 10 caracteres de longitud',
-            'document.digits_between' => 'El documento debe tener entre 10 y 12 digitos',
+            'document.min' => 'El documento debe tener minimo 8 caracteres de longitud',
+            'document.max' => 'El documento debe tener maximo 12 caracteres de longitud',
+            'document.digits_between' => 'El documento debe tener entre 8 y 12 digitos',
             'business_name.required' => 'La razon social es requerida',
             'business_name.unique' => 'La razon social ingresada ya esta registrada',
             'business_name.min' => 'La razon social debe tener minimo 1 caracter de longitud',

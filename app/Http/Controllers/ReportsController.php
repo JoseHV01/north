@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use stdClass;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportsController extends Controller
 {
@@ -38,7 +39,7 @@ class ReportsController extends Controller
         ->selectRaw('products.id, SUM(quantity_sale) as total')
         ->groupBy('products.id')
         ->orderBy('total', 'DESC')
-        ->take(5)
+        ->take(10)
         ->get();
 
         return $productsSales->each(function ($product) {
@@ -243,5 +244,121 @@ class ReportsController extends Controller
             ->groupBy('name')
             ->orderBy('name', 'ASC')
             ->get();
+    }
+
+    public function exportTransactionsPdf($year, $month){
+
+        $json = $this->distributionTransaction($year, $month);
+        $records = json_decode($json);
+
+        $monthInt = intval($month);
+        $monthsEs = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        ];
+        $monthName = $monthsEs[$monthInt] ?? '';
+
+        $viewData = [
+            'records' => $records,
+            'year' => $year,
+            'month' => $monthInt,
+            'monthName' => ucfirst($monthName),
+        ];
+
+        $pdf = Pdf::loadView('reports.transactions_pdf', $viewData)->setPaper('a4', 'portrait');
+
+        $filename = "transactions_{$year}_{$monthInt}.pdf";
+        return $pdf->download($filename);
+    }
+
+    public function exportProductsMoreSale($year, $month){
+
+        $products = $this->productMoreSale($year, $month);
+        $products = collect($products)->map(function ($p) {
+            if (empty($p->name)) {
+                $p->name = DB::table('products')->where('id', $p->id)->value('description');
+            }
+            return $p;
+        });
+
+        $monthInt = intval($month);
+        $monthsEs = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        ];
+        $monthName = $monthsEs[$monthInt] ?? '';
+
+        $viewData = [
+            'products' => $products,
+            'year' => $year,
+            'month' => $monthInt,
+            'monthName' => ucfirst($monthName),
+        ];
+
+        $pdf = Pdf::loadView('reports.products_more_sale_pdf', $viewData)->setPaper('a4', 'portrait');
+        $filename = "products_more_sale_{$year}_{$monthInt}.pdf";
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Exportar volúmenes de compra y venta por mes (año) a PDF.
+     */
+    public function exportOperationsPdf($year)
+    {
+        // Obtener datos (json) y decodificar
+        $json = $this->queryOperations($year);
+        $arrays = json_decode($json);
+
+        $purchases = $arrays[0] ?? [];
+        $sales = $arrays[1] ?? [];
+
+        // Mapeo meses en español
+        $monthsEs = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        ];
+
+        // Construir mapa por mes con compras y ventas
+        $map = [];
+        foreach ($purchases as $p) {
+            $m = intval($p->month);
+            $map[$m]['purchases'] = intval($p->total);
+        }
+        foreach ($sales as $s) {
+            $m = intval($s->month);
+            $map[$m]['sales'] = intval($s->total);
+        }
+
+        ksort($map);
+
+        $rows = [];
+        $grandPurchases = 0;
+        $grandSales = 0;
+        foreach ($map as $m => $vals) {
+            $pTotal = $vals['purchases'] ?? 0;
+            $sTotal = $vals['sales'] ?? 0;
+            $grandPurchases += $pTotal;
+            $grandSales += $sTotal;
+            $rows[] = (object)[
+                'month' => $m,
+                'monthName' => ucfirst($monthsEs[$m] ?? ''),
+                'purchases' => $pTotal,
+                'sales' => $sTotal,
+            ];
+        }
+
+        $viewData = [
+            'year' => $year,
+            'rows' => $rows,
+            'grandPurchases' => $grandPurchases,
+            'grandSales' => $grandSales,
+        ];
+
+        $pdf = Pdf::loadView('reports.operations_volume_pdf', $viewData)->setPaper('a4', 'portrait');
+        $filename = "operations_volume_{$year}.pdf";
+        return $pdf->download($filename);
     }
 }

@@ -15,11 +15,11 @@
           </a>
           <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up negative-margin-right" aria-labelledby="drop1">
             <div class="message-body py-3">
-                <form method="POST" action="{{ url('changebcv/4') }}" autocomplete="off">
+                <form method="POST" action="{{ url('changebcv') }}" autocomplete="off">
 				    {{ csrf_field() }}
                     <input type="hidden" name="_method" value="PUT">
 
-                    <input name="name" type="hidden" class="form-control" id="inputName" required value="Tasa BCV">
+                    <input name="name" type="hidden" class="form-control" id="inputName" required value="BCV">
 
                     <div class="form-group mb-3 d-flex justify-content-center">
                         <input name="value" type="text" class="form-control w-75" id="inputValue" required min="1" placeholder="Tasa BCV" value="{{ Cache::get('bcv') }}">

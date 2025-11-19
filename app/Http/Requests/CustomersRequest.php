@@ -21,7 +21,7 @@ class CustomersRequest extends FormRequest
 
         return [
             'type_document' => 'required|exists:document_types,id',
-            'document' => ['required', 'numeric', 'digits_between:7,12', $id ? Rule::unique('customers')->where('id_document_type', $this->type_document)->ignore($id) : Rule::unique('customers')->where('id_document_type', $this->type_document)],
+            'document' => ['required', 'numeric', 'digits_between:8,12', $id ? Rule::unique('customers')->where('id_document_type', $this->type_document)->ignore($id) : Rule::unique('customers')->where('id_document_type', $this->type_document)],
             'business_name' => ['required', 'min:1', 'max:200', /*'max:50',*/ $id ? Rule::unique('customers')->ignore($id) : Rule::unique('customers')],
             'email' => ['nullable', 'email', 'min:10', 'max:200', $id ? Rule::unique('customers')->ignore($id) : Rule::unique('customers')],
             'phone' => ['nullable', 'numeric', 'digits_between:10,12', /*'max:12',*/ $id ? Rule::unique('customers')->ignore($id) : Rule::unique('customers')],
@@ -38,9 +38,9 @@ class CustomersRequest extends FormRequest
             'document.required' => 'El documento es requerido',
             'document.unique' => 'El documento ingresado ya esta registrado',
             'document.numeric' => 'El documento solo puede contener numeros',
-            'document.min' => 'El documento debe tener minimo 7 caracteres de longitud',
-            'document.max' => 'El documento debe tener maximo 10 caracteres de longitud',
-            'document.digits_between' => 'El documento debe tener entre 7 y 12 digitos',
+            'document.min' => 'El documento debe tener minimo 8 caracteres de longitud',
+            'document.max' => 'El documento debe tener maximo 12 caracteres de longitud',
+            'document.digits_between' => 'El documento debe tener entre 8 y 12 digitos',
             'business_name.required' => 'La razon social es requerida',
             'business_name.unique' => 'La razon social ingresada ya esta registrada',
             'business_name.min' => 'La razon social es requerida',

@@ -28,11 +28,13 @@
 											<div class="form-group mb-3">
 												<label for="inputName" class="form-label">Nombre</label>
 												<input name="name" type="text" class="form-control" id="inputName" required minlenght="1" maxlenght="50">
+												<p class="text-danger small d-none" id="messageName">El nombre de la tasa puede contener solo letras y numeros, bebe de tener entre 1 y 50 caracteres de longitud</p>
 											</div>
 
 											<div class="form-group mb-3">
 												<label for="inputValue" class="form-label">Porcentaje</label>
-												<input name="value" type="number" class="form-control" id="inputValue" required min="1" max="100">
+												<input name="value" type="number" class="form-control" id="inputValue" required min="1" max="99" pattern="^[1-9][0-9]?$">
+												<p class="text-danger small d-none" id="messageValue">El valor de la tasa debe contener solo numeros, el valor de la tasa debe ser 1 y 99</p>
 											</div>
 											<div class="form-check mb-3">
 												<input class="form-check-input" type="radio" name="tax" value="0" id="applyRates">
@@ -71,7 +73,8 @@
 					</thead>
 					<tbody>
 						@foreach($rates as $rate)
-                            @if ($rate->id != 2)
+						
+                            @if (strpos(strtolower($rate->name), "ganancia") === false && strpos(strtolower($rate->name), "bcv") === false)
                                 <tr>
                                     <td scope="row">{{ $rate->name }}</td>
                                     <td>{{ $rate->value }}</td>
@@ -102,8 +105,8 @@
 
                                                             <div class="form-group mb-4">
                                                                 <label for="inputValue" class="form-label">Porcentaje</label>
-                                                                <input name="value" type="number" class="form-control" id="inputEditValue" required min="0" max="100" value="{{ $rate ->value }}">
-																<p class="text-danger small d-none" id="messageEditValue">El valor de la tasa debe contener solo numeros, el valor de la tasa debe ser 1 y 100</p>
+                                                                <input name="value" type="number" class="form-control" id="inputEditValue" required min="0" max="99" value="{{ $rate ->value }}">
+																<p class="text-danger small d-none" id="messageEditValue">El valor de la tasa debe contener solo numeros, el valor de la tasa debe ser 1 y 99</p>
                                                             </div>
 															<div class="form-check mb-3">
 																<input class="form-check-input" type="radio" name="tax" value="0" id="applyRates{{$rate->id}}" {{$rate->tax == "Aplicar subtotal" ? "checked" : ""}} >

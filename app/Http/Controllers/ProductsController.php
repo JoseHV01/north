@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Providers\App\Events\informationHasBeenRemoved;
 use App\Http\Requests\ProductsRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductsController extends Controller
 {
@@ -124,8 +125,42 @@ class ProductsController extends Controller
         });
 
         $categories = DB::table('categorys')->where('status', 1)->orderBy('name', 'ASC')->select('id', 'name')->get();
-        $ganance = DB::table('rates')->where('name', "like", '%anancia%')->where('status', 1)->value('value');
+        // $ganance = DB::table('rates')->where('name', "like", '%anancia%')->where('status', 1)->value('value');
 
-        return view('pages/products')->with('products', $products)->with('categories', $categories)->with('ganance', $ganance);
+        $rates = DB::table('rates')->where('status', 1)->get();
+        $ganance = $rates->firstWhere('name', "like", '%anancia%')->value ?? 0;
+        $bcv = $rates->firstWhere('name', 'BCV')->value ?? 0;
+
+        return view('pages/products')->with('products', $products)->with('categories', $categories)->with('ganance', $ganance)->with('bcv', $bcv);
+    }
+
+    /**
+     * Exportar productos a PDF respetando filtros (product term).
+     */
+    public function exportProductsPdf(Request $request)
+    {
+        $q = trim((string) ($request->product ?? ''));
+        $qLower = $q !== '' ? mb_strtolower($q) : '';
+
+        $productsQuery = DB::table('products')
+            ->join('categorys', 'categorys.id', '=', 'products.id_category')
+            ->select('products.*', 'categorys.name as category_name')
+            ->orderBy('description', 'ASC')
+            ->when($qLower, function ($builder) use ($qLower) {
+                $builder->whereRaw('LOWER(products.description) LIKE ?', ["%{$qLower}%"]);
+            });
+
+        $products = $productsQuery->get();
+
+        $viewData = [
+            'products' => $products,
+            'filters' => [
+                'product' => $q,
+            ],
+        ];
+
+        $pdf = Pdf::loadView('reports.products_list_pdf', $viewData)->setPaper('a4', 'portrait');
+        $filename = 'products_' . date('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
     }
 }

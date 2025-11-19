@@ -45,6 +45,7 @@
                 </div>
             </div>
 
+            <div class="mb-3"><h3 class="fw-bold text-center">{{ $sales->status != 0 ? "Factura Anulada" : "" }}</h3></div>
             <div class="row">
                 <div class="col-12 col-md-8 text-center mb-3 mb-md-0">
                     <h3 class="fw-bold">{{ $company->name }}</h3>
@@ -111,6 +112,7 @@
                         <tr>
                             <th>Producto</th>
                             <th>Cantidad</th>
+                            {{-- <th>Precio</th> --}}
                             <th>Precio</th>
                             <th>Total</th>
                         </tr>
@@ -120,7 +122,14 @@
                             <tr>
                                 <td scope="row">{{ $product->description }}</td>
                                 <td>{{ $product->amount }}</td>
-                                <td>{{ floor($product->price * pow(10, 2)) / pow(10, 2) }}</td>
+                                {{-- <td>{{ floor($product->price * pow(10, 2)) / pow(10, 2) }}</td> --}}
+                                <td>
+                                    @if(isset($sales->bcv) && floatval($sales->bcv) > 0)
+                                        {{ floor(($product->price * floatval($sales->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>{{ floor($product->amount*$product->price * pow(10, 2)) / pow(10, 2) }}</td>
                             </tr>
                         @endforeach
@@ -138,18 +147,18 @@
                     <div>
                         <div class="text-end mb-2 mb-md-3">
                             Base Imponible:
-                            <span class="d-inline-block rounded p-2 box-details-bills text-center">{{ floor($sales->tax_base * pow(10, 2)) / pow(10, 2) }}</span>
+                            <span class="d-inline-block rounded p-2 box-details-bills text-center">{{ floor(($sales->tax_base * floatval($sales->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs</span>
                         </div>
                         <div class="text-end mb-2 mb-md-3">
                             I.V.A:
                             <span class="d-inline-block border-box-detail text-center">{{ $sales->iva }}</span>%
                             SOBRE
-                            <span class="d-inline-block border-box-detail text-center">{{ $sales->tax_base }}</span>
+                            <span class="d-inline-block border-box-detail text-center">{{ floor(($sales->tax_base * floatval($sales->bcv)) * pow(10, 2)) / pow(10, 2) }}</span>
                             <span class="d-inline-block rounded p-2 box-details-bills text-center">
-                                {{ floor((($sales->iva * $sales->tax_base) / 100) * pow(10, 2)) / pow(10, 2) }}
+                                {{ floor(((($sales->iva * $sales->tax_base) / 100) * floatval($sales->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs
                             </span>
                         </div>
-                        @if($sales->igtf > 0)
+                        {{-- @if($sales->igtf > 0)
                             <div class="text-end mb-2 mb-md-3">
                                 IGTF:
                                 <span class="d-inline-block border-box-detail text-center">{{ $sales->igtf }}</span>%
@@ -161,10 +170,10 @@
                                     }}
                                 </span>
                             </div>
-                        @endif
+                        @endif --}}
                         <div class="text-end mb-2 mb-md-3">
                             Total:
-                            <span class="d-inline-block rounded p-2 box-details-bills text-center"> {{  floor($sales->total * pow(10, 2)) / pow(10, 2) }} Bs</span>
+                            <span class="d-inline-block rounded p-2 box-details-bills text-center"> {{  floor(($sales->total * floatval($sales->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs</span>
                         </div>
                     </div>
                 </div>

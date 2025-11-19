@@ -161,17 +161,17 @@
                 <tr>
                     <th style="width: 50%;">Descripción</th>
                     <th style="width: 15%;">Cantidad</th>
-                    <th style="width: 15%;">Precio Unitario</th>
-                    <th style="width: 20%;">Total</th>
+                    <th style="width: 15%;">Precio Unitario (Bs)</th>
+                    <th style="width: 20%;">Total (Bs)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($data[1] as $product)
                     <tr>
                         <td style="text-align: left;">{{ $product->description }}</td>
-                        <td>{{ number_format($product->amount, 2) }}</td>
-                        <td>{{ number_format($product->price, 2) }}</td>
-                        <td>{{ number_format($product->amount * $product->price, 2) }}</td>
+                        <td>{{ number_format($product->amount, 0) }}</td>
+                        <td>{{ number_format($product->price * $data[0]->bcv, 2) }} Bs</td>
+                        <td>{{ number_format($product->amount * $product->price * $data[0]->bcv, 2) }} Bs</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -187,33 +187,22 @@
             <div class="calculations">
                 <div class="calculation-row">
                     <div class="label">Base Imponible:</div>
-                    <div class="value">{{ number_format($data[0]->tax_base, 2) }}</div>
+                    <div class="value">{{ number_format($data[0]->tax_base * $data[0]->bcv, 2) }} Bs</div>
                 </div>
 
                 <div class="calculation-row">
                     <div class="label">IVA ({{ $data[0]->iva }}%):</div>
                     @php
-                        $ivaAmount = ($data[0]->iva * $data[0]->tax_base) / 100;
+                        $ivaAmount = (($data[0]->iva * $data[0]->tax_base) / 100) * $data[0]->bcv;
                     @endphp
-                    <div class="value">{{ number_format($ivaAmount, 2) }}</div>
+                    <div class="value">{{ number_format($ivaAmount, 2) }} Bs</div>
                 </div>
-
-                @if($data[0]->igtf > 0)
-                    @php
-                        $subtotalPlusIva = $data[0]->tax_base + $ivaAmount;
-                        $igtfAmount = ($subtotalPlusIva * $data[0]->igtf) / 100;
-                    @endphp
-                    <div class="calculation-row">
-                        <div class="label">IGTF ({{ $data[0]->igtf }}%):</div>
-                        <div class="value">{{ number_format($igtfAmount, 2) }}</div>
-                    </div>
-                @endif
 
                 <hr style="border: 0; border-top: 1px solid #000;">
 
                 <div class="calculation-row total-final">
-                    <div class="label">**TOTAL A PAGAR (Bs):**</div>
-                    <div class="value">**{{ number_format($data[0]->total, 2) }} Bs**</div>
+                    <div class="label">**TOTAL A PAGAR:**</div>
+                    <div class="value">**{{ number_format($data[0]->total * $data[0]->bcv, 2) }} Bs**</div>
                 </div>
             </div>
         </div>

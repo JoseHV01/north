@@ -50,7 +50,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    {{ floor(($shop->total) * pow(10, 2)) / pow(10, 2) }} Bs
+                                    {{ floor(($shop->total) * pow(10, 2)) / pow(10, 2) }} $
                                 </td>
                             </tr>
                         @endforeach

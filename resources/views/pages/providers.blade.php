@@ -19,21 +19,29 @@
 
             <div class="row pt-4 pt-md-3">
 				<div class="col-12 col-md-5 mt-2">
-					<form action="{{ url('providers/search/list') }}" method="get">
-						<div class="input-group">
-							<input type="text" name="provider" class="form-control" minlenght="3" placeholder="Buscar por razon social...">
-							<button type="submit" class="btn btn-primary">
-								<span><i class="ti ti-search"></i></span>
-							</button>
-						</div>
-					</form>
+                    <form action="{{ url('providers/search/list') }}" method="get">
+                        <div class="input-group">
+                            <select name="type" class="form-control" style="max-width:160px;">
+                                <option value="">Todos</option>
+                                <option value="provider" {{ request('type') == 'provider' ? 'selected' : '' }}>Proveedor</option>
+                                <option value="customer" {{ request('type') == 'customer' ? 'selected' : '' }}>Cliente</option>
+                            </select>
+                            <input type="text" name="provider" class="form-control" placeholder="Buscar por razon social..." value="{{ request('provider') }}">
+                            <button type="submit" class="btn btn-primary">
+                                <span><i class="ti ti-search"></i></span>
+                            </button>
+                        </div>
+                    </form>
 				</div>
 
-				<div class="d-none col-md-7 d-md-flex justify-content-end">
-					<button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#modalAgg" data-toggle="tooltip" title="Agregar">
-						<span><i class="ti ti-plus"></i></span>
-					</button>
-				</div>
+                <div class="d-none col-md-7 d-md-flex justify-content-end">
+                    <a href="{{ url('export/providers') . (request()->getQueryString() ? '?' . request()->getQueryString() : '') }}" class="btn btn-primary m-1" title="Exportar">
+                        <span><i class="ti ti-file-export"></i></span> Exportar
+                    </a>
+                    <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#modalAgg" data-toggle="tooltip" title="Agregar">
+                        <span><i class="ti ti-plus"></i></span>
+                    </button>
+                </div>
 			</div>
 
 			@if(count($providers) > 0)
@@ -151,6 +159,6 @@
     @include('pages.modals.providers.modalAddProvider')
 
 	@include('../layouts/message')
-    <script src="{{ asset('js/validProviders.js') }}"></script>
-    <script src="{{ asset('js/validCustomers.js') }}"></script>
+    {{-- <script src="{{ asset('js/validProviders.js') }}"></script>
+    <script src="{{ asset('js/validCustomers.js') }}"></script> --}}
 @endsection

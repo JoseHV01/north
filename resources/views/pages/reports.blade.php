@@ -48,6 +48,9 @@
                                     <tbody id="bodyTable"></tbody>
                                 </table>
                             </div>
+                            <div>
+                                <button class="btn btn-primary" onclick="exportProducts()">Exportar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,6 +159,9 @@
                     </div>
 
                     <div id="container_operations" class="d-flex justify-content-center align-items-center mt-4 container-chart"></div>
+                    <div class="mt-4">
+                        <button class="btn btn-primary" onclick="exportOperations()">Exportar</button>
+                    </div>
                 </div>
             </div>
 
@@ -192,6 +198,10 @@
                     </div>
 
                     <div id="container_distribution_transaction" class="d-flex justify-content-center align-items-center mt-4 container-chart"></div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-primary" onclick="exportTransactions()">Exportar</button>
+                    </div>
                 </div>
             </div>
 	    </div>
@@ -217,6 +227,26 @@
         searchProducts();
         searchOperations();
         searchDistributionTransaction();
+
+        exportProducts = () => {
+            let year = document.getElementById('selectorYear').value != '' ? document.getElementById('selectorYear').value : new Date().getFullYear();
+            let month = document.getElementById('selectorMonth').value != '' ? document.getElementById('selectorMonth').value  : (new Date().getMonth() + 1);
+
+            window.open(`export/products-more-sale/${year}/${month}`, '_blank');
+        }
+
+        exportOperations = () => {
+            let year = document.getElementById('selectorYearOperations').value != '' ? document.getElementById('selectorYearOperations').value : new Date().getFullYear();
+
+            window.open(`export/operations-volume/${year}`, '_blank');
+        }
+
+        exportTransactions = () => {
+            let year = document.getElementById('selectorYearDistribution').value != '' ? document.getElementById('selectorYearDistribution').value : new Date().getFullYear();
+            let month = document.getElementById('selectorMonthDistribution').value != '' ? document.getElementById('selectorMonthDistribution').value  : (new Date().getMonth() + 1);
+
+            window.open(`export/transaction/${year}/${month}`, '_blank');
+        }
 
         async function searchProducts() {
             let year = document.getElementById('selectorYear').value != '' ? document.getElementById('selectorYear').value : new Date().getFullYear();

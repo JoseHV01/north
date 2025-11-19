@@ -71,26 +71,26 @@ class RatesController extends Controller
         }
     }
 
-    public function changeBCV(Request $request, $id){
-        if(!is_numeric($request->value)) return back()->withErrors(['error' => "Debe ingresar solo numeros"]);
+    public function changeBCV(Request $request){
+        // if(!is_numeric($request->value)) return back()->withErrors(['error' => "Debe ingresar solo numeros"]);
         
-        DB::beginTransaction();
-        try {
+        // DB::beginTransaction();
+        // try {
 
-            DB::table('rates')->where('id', $id)->update([
-                'name' => $request->name,
-                'value' => $request->value,
-                'tax' => $request->tax
-            ]);
+        //     DB::table('rates')->where('id', $id)->update([
+        //         'name' => $request->name,
+        //         'value' => $request->value,
+        //         'tax' => $request->tax
+        //     ]);
 
-            Cache::forever('bcv', $request->value);
+        //     Cache::forever('bcv', $request->value);
 
-            DB::commit();
-            return redirect()->back()->with('success', "Tasa BCV actualizada");
-        } catch (\Throwable $th) {
-            DB::rollback();
-			return back()->withErrors(['error'=>"Ha ocurrido un error, vuelve a intentar"]);
-        }
+        //     DB::commit();
+        //     return redirect()->back()->with('success', "Tasa BCV actualizada");
+        // } catch (\Throwable $th) {
+        //     DB::rollback();
+		// 	return back()->withErrors(['error'=>"Ha ocurrido un error, vuelve a intentar"]);
+        // }
     }
 
     public function changeStatus($id)

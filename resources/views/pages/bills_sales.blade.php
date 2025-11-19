@@ -10,6 +10,9 @@
 
                 <div class="col-6">
 					<div class="d-flex justify-content-end">
+                        <a role="button" class="btn btn-primary m-1" href="{{ url('export/sales') . (request()->getQueryString() ? '?' . request()->getQueryString() : '') }}" data-toggle="tooltip" title="Exportar">
+                            <span><i class="ti ti-report"></i></span> Exportar
+                        </a>
                         <a role="button" class="btn btn-primary m-1" href="{{ url('report/sales') }}" data-toggle="tooltip" title="Agregar">
 							<span><i class="ti ti-report"></i></span> Reporte Diario
 						</a>
@@ -20,40 +23,39 @@
                 </div>
             </div>
 
-            @if(count($sales) > 0)
                 <form action="{{ url('bills/search/sales') }}" method="get" class="row mt-4 mb-3">
                     <div class="form-group col-12 col-md-3 mb-3 mb-md-0">
                         <small class="form-label">Cliente</small>
                         <select name="customer" class="form-control">
                             <option value="">- Seleccione -</option>
                             @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->business_name }}</option>
+                                <option value="{{ $customer->id }}" {{ (string)request('customer') === (string)$customer->id ? 'selected' : '' }}>{{ $customer->business_name }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="form-group col-12 col-md-3 mb-3 mb-md-0">
                         <small class="form-label">Numero Factura</small>
-                        <input type="number" class="form-control" name="number_bills">
+                        <input type="number" class="form-control" name="number_bills" value="{{ request('number_bills') }}" placeholder="Número de factura">
                     </div>
 
                     <div class="form-group col-6 col-md-2 mb-3 mb-md-0">
                         <small class="form-label">Fecha Inicio</small>
-                        <input type="date" class="form-control" name="start" max="{{ date("Y-m-d") }}">
+                        <input type="date" class="form-control" name="start" max="{{ date("Y-m-d") }}" value="{{ request('start') }}">
                     </div>
 
                     <div class="form-group col-6 col-md-2 mb-3 mb-md-0">
                         <small class="form-label">Fecha Fin</small>
-                        <input type="date" class="form-control" name="end" max="{{ date("Y-m-d") }}">
+                        <input type="date" class="form-control" name="end" max="{{ date("Y-m-d") }}" value="{{ request('end') }}">
                     </div>
 
                     <div class="col-12 col-md-2 d-flex align-items-center pt-1 pt-md-2">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary me-2">
                             <i class="ti ti-search"></i>
                         </button>
+                        <a href="{{ url('bills/sales') }}" class="btn btn-outline-secondary" title="Limpiar filtros">Limpiar</a>
                     </div>
                 </form>
-            @endif
 
 			@if(count($sales) > 0)
 				<div class="table-responsive">
@@ -98,7 +100,7 @@
                                         {{ $sale->status == 0 ? 'Vigente' : 'Anulada' }}
                                     </td>
                                     <td>
-                                        {{ floor(($sale->total) * pow(10, 2)) / pow(10, 2) }} Bs
+                                        {{ floor(($sale->total) * pow(10, 2)) / pow(10, 2) }} $
                                     </td>
                                     <td>
                                         <a href="{{ url("bills/sales/$sale->id") }}" class="btn btn-sm btn-success mb-2" data-toggle="tooltip" title="Detalles" target="_blank">
@@ -133,11 +135,11 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <a href="{{ url("bills/pdf/sales/$sale->id") }}" class="btn btn-sm btn-info mb-2"  data-toggle="tooltip" title="Generar PDF">
+                                                <span><i class="ti ti-file-export"></i></span>
+                                            </a>
                                         @endif
 
-                                        <a href="{{ url("bills/pdf/sales/$sale->id") }}" class="btn btn-sm btn-info mb-2"  data-toggle="tooltip" title="Generar PDF">
-                                            <span><i class="ti ti-file-export"></i></span>
-                                        </a>
 
                                         @if($sale->state == 'Pendiente' && $sale->status == 0 && auth()->user()->id_rol == 1)
                                             <!-- ModalChangeStateOperation -->

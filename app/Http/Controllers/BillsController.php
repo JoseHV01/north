@@ -32,7 +32,7 @@ class BillsController extends Controller
 
         $extendLogsController = new LogsController();
         $extendLogsController->insertLogOperations('Compras', "Visualizacion detalles de la factura N ".$result[0]->invoice_number);
-
+        $result[0]->bcv = isset($result[0]->payments[0]->price_BCV) ? $result[0]->payments[0]->price_BCV : 0;
         return view('pages/bills_shopping_details')->with("shopping", $result[0])->with("products", $result[1]);
     }
 
@@ -107,18 +107,18 @@ class BillsController extends Controller
 
     public function searchBills(Request $request, $type)
     {
+        
         $extendLogsController = new LogsController();
 
         if($type == 'sales'){
-            if($request->customer != null || $request->number_bills != null || $request->start != null || $request->end != null){
-                $customers = DB::table('customers')->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')->where('status', 1)->orderBy('customers.business_name', 'ASC')->select('customers.id', 'customers.business_name')->get();
 
-                $extendLogsController->insertLogOperations('Ventas', 'Busqueda en los registros de venta');
+            $sales = $this->searchSales($request->all());
+ 
+            $customers = DB::table('customers')->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')->where('status', 1)->orderBy('customers.business_name', 'ASC')->select('customers.id', 'customers.business_name')->get();
 
-                return view('pages/bills_sales')->with('sales', $this->searchSales($request->all()))->with('customers', $customers);
-            }
+            $extendLogsController->insertLogOperations('Ventas', 'Busqueda de los registros de venta');
 
-            return back()->withErrors(['error' => "Debe agregar un parametro de busqueda"]);
+            return view('pages/bills_sales')->with('sales', $sales)->with('customers', $customers);
         }
 
         if($type == 'purchases'){
@@ -160,7 +160,7 @@ class BillsController extends Controller
                 ->join("products","products.id", "id_product")
                 ->select("products.description", "sales_invoice_details.*")
                 ->get();
-
+                
                 $company = DB::table("company")->first();
                 $data = [$sales, $products, $company, $id];
                 $numberBill = $sales->number_bill;
@@ -171,8 +171,9 @@ class BillsController extends Controller
                 $company = DB::table("company")->first();
                 $shop = new ShoppingController();
                 $shopping = $shop->getBill($id);
+                $bcv = isset($shopping[0]->payments[0]->price_BCV) ? $shopping[0]->payments[0]->price_BCV : 0;
                 $numberBill = $shopping[0]->invoice_number;
-                $data = [$shopping[0], $shopping[1], $company, $id];
+                $data = [$shopping[0], $shopping[1], $company, $id, $bcv];
                 $module = 'Compras';
                 $pdf = PDF::loadView('pdfs/pdf_bills_shopping', compact('data'));
             }
@@ -244,9 +245,9 @@ class BillsController extends Controller
         $sales = DB::table('sales_invoices')
         ->join('customers', 'customers.id', '=', 'sales_invoices.id_customer')
         ->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')
-        ->join('shapes_payment', 'shapes_payment.id', '=', 'sales_invoices.id_shapes_payment')
         ->join('states_operation', 'states_operation.id', '=', 'sales_invoices.id_state_operation')
-        ->select('sales_invoices.*', 'document_types.name as document_type', 'customers.document', 'customers.business_name', 'shapes_payment.name as shape', 'states_operation.name as state')
+        ->select('sales_invoices.*', 'document_types.name as document_type', 'customers.document', 'customers.business_name', 'states_operation.name as state')
+        ->orderBy('sales_invoices.status', 'ASC')
         ->orderBy('sales_invoices.created_at', 'DESC')
         ->where(function($query) use ($params){
             if($params['customer'] != null){
@@ -254,7 +255,7 @@ class BillsController extends Controller
             }
 
             if($params['number_bills'] != null){
-                $query->where('sales_invoices.number_bill', $params['number_bills']);
+                $query->where('sales_invoices.number_bill', "like", "%".$params['number_bills']."%");
             }
 
             if($params['start'] != null){
@@ -297,14 +298,68 @@ class BillsController extends Controller
         ->orderBy('sales_invoices.created_at', 'DESC')
         ->get();
 
+        // Agrupar resultados por nombre del método de pago
         $salesByShape = $raw->groupBy('payment_shape');
         
         $customers = DB::table('customers')->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')->where('status', 1)->orderBy('customers.business_name', 'ASC')->select('customers.id', 'customers.business_name')->get();
 
         $extendLogsController = new LogsController();
         $extendLogsController->insertLogOperations('Ventas', 'Visualizacion de los reportes de ventas');
-           
+            
         return view('pages/reports_sales')->with('salesByShape', $salesByShape)->with('customers', $customers);
+    }
+
+    /**
+     * Exportar ventas a PDF respetando filtros (customer, number_bills, start, end).
+     */
+    public function exportSalesPdf(Request $request)
+    {
+        $params = [
+            'customer' => $request->customer ?? null,
+            'number_bills' => $request->number_bills ?? null,
+            'start' => $request->start ?? null,
+            'end' => $request->end ?? null,
+        ];
+
+        $salesQuery = DB::table('sales_invoices')
+            ->join('customers', 'customers.id', '=', 'sales_invoices.id_customer')
+            ->leftJoin('document_types', 'document_types.id', '=', 'customers.id_document_type')
+            ->join('states_operation', 'states_operation.id', '=', 'sales_invoices.id_state_operation')
+            ->select('sales_invoices.*', 'document_types.name as document_type', 'customers.document', 'customers.business_name', 'states_operation.name as state')
+            ->orderBy('sales_invoices.created_at', 'DESC')
+            ->where(function($query) use ($params) {
+                if(!empty($params['customer'])){
+                    $query->where('customers.id', $params['customer']);
+                }
+
+                if(!empty($params['number_bills'])){
+                    $query->where('sales_invoices.number_bill', 'like', "%".$params['number_bills']."%");
+                }
+
+                if(!empty($params['start'])){
+                    $query->whereDate('sales_invoices.created_at', '>=', $params['start']);
+                }
+
+                if(!empty($params['end'])){
+                    $query->whereDate('sales_invoices.created_at', '<=', $params['end']);
+                }
+
+                if(!empty($params['start']) && !empty($params['end'])){
+                    $query->whereDate('sales_invoices.created_at', '>=', $params['start'])
+                    ->whereDate('sales_invoices.created_at', '<=', $params['end']);
+                }
+            });
+
+        $sales = $salesQuery->get();
+
+        $viewData = [
+            'sales' => $sales,
+            'filters' => $params,
+        ];
+
+        $pdf = Pdf::loadView('reports.sales_list_pdf', $viewData)->setPaper('a4', 'portrait');
+        $filename = 'sales_' . date('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function searchPurchases($params){

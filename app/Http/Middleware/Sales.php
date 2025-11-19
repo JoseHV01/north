@@ -17,11 +17,15 @@ class Sales
     public function handle($request, Closure $next)
     {
         $permission = Cache::get('permissions');
-        if(in_array('Ventas', $permission)){
-            // $this->controller->store($request, 'Ventas');
-            return $next($request);
-        }else{
-			return back()->withErrors(['error' => "Ruta no autorizada"]);
+        if(!empty($permission)){
+            if(in_array('Ventas', $permission)){
+                // $this->controller->store($request, 'Ventas');
+                return $next($request);
+            }else{
+                return back()->withErrors(['error' => "Ruta no autorizada"]);
+            }
+        } else {
+            return back()->withErrors(['error' => "Ruta no autorizada"]);   
         }
     }
 }

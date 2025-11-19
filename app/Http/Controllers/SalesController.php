@@ -82,28 +82,10 @@ class SalesController extends Controller
     public function store(SalesRequest $request)
     {
         
-
-        $totalBs = $request->input('totalSale');
+        // Inputs already validated by SalesRequest
+        $totalSale = floatval($request->input('totalSale'));
         $amounts = $request->input('amounts', []);
-        $rate = DB::table('rates')->where('name', 'BCV')->first()->value ?? 0;
-
-        if(count($amounts) > 1){
-
-            $sum = 0;
-            foreach ($amounts as $id => $amount) {
-                $shape = DB::table('shapes_payment')->where('id', $id)->first();
-
-                if (str_contains(strtolower($shape->name), 'divisas') || str_contains(strtolower($shape->name), 'dolares') || str_contains(strtolower($shape->name), 'usd')) {
-                    $sum += $amount * $rate;
-                } else {
-                    $sum += $amount;
-                }
-            }
-            
-            if (abs($sum - $totalBs) > 0.01) {
-                return back()->withErrors(['totalShopping' => 'La suma de los montos no coincide con el total.']);
-            }
-        }
+        $rate = DB::table('rates')->where('name', 'BCV')->value('value') ?? 0;
        
 
         foreach ($request->product_id as $key => $id) {
@@ -116,23 +98,33 @@ class SalesController extends Controller
             $rates = DB::table('rates')->where('status', 1)->get();
             $headerCompany = DB::table('company')->orderBy('created_at', 'DESC')->value('id');
 
+            // defensive: map rates
+            $ivaRate = isset($rates[0]) ? floatval($rates[0]->value) : 0;
+            $gananceRate = isset($rates[1]) ? floatval($rates[1]->value) : 0;
+            $igtfRate = isset($rates[2]) ? floatval($rates[2]->value) : 0;
+
+            // Determine if IGTF applies based on selected payment shapes (id == 2)
+            $selectedShapes = $request->input('shape_payment', []);
+            $igtfValue = (is_array($selectedShapes) && in_array(2, array_map('intval', $selectedShapes))) ? $igtfRate : 0;
+
             $id_transaction = DB::table('sales_invoices')->insertGetId([
                 'id_customer' => $request->customer,
                 'tax_base' => $request->taxBase,
-                'total' => $request->totalSale,
-                'iva' => $rates[0]->value,
-                'igtf' => in_array($amounts, array_keys($request->input('amounts', []))) == 2 ? $rates[2]->value : 0,
-                'bcv' => in_array($amounts, array_keys($request->input('amounts', []))) ? $rates[3]->value : 0,
-                'ganance' => $rates[1]->value,
-                'id_state_operation' => $request->states_operation,
+                'total' => floatval($request->totalSale),
+                'iva' => $ivaRate,
+                'igtf' => $igtfValue,
+                'bcv' => $rate,
+                'ganance' => $gananceRate,
+                'id_state_operation' => $request->states_operation ?? 1,
                 'id_header' => $headerCompany
             ]);
 
-            foreach ($amounts as $id => $amount) {
+            // Insert payments: amounts come validated; convert stored value to numeric
+            foreach ($amounts as $shapeId => $amount) {
                 DB::table('sales_invoices_shapes_payment')->insert([
                     'id_sales_invoice' => $id_transaction,
-                    'id_shape_payment' => $id,
-                    'amount' => $amount,
+                    'id_shape_payment' => intval($shapeId),
+                    'amount' => is_numeric($amount) ? floatval($amount) : 0,
                     'price_BCV' => $rate,
                 ]);
             }

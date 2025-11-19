@@ -90,7 +90,7 @@
                                     {{ $shop->status == 0 ? 'Vigente' : 'Anulada' }}
                                 </td>
                                 <td>
-                                    {{ floor(($shop->total) * pow(10, 2)) / pow(10, 2) }} Bs
+                                    {{ floor(($shop->total) * pow(10, 2)) / pow(10, 2) }} $
                                 </td>
                                 <td>
                                     

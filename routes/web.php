@@ -41,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['sales'])->group(function () {
             Route::resource('/sales', SalesController::class);
             Route::get('report/sales', [BillsController::class, 'SalesReports']);
+            // Export sales filtered or all
+            Route::get('export/sales', [BillsController::class, 'exportSalesPdf']);
             Route::get('/bills/sales', [BillsController::class, 'sales']);
             Route::get('/bills/sales/{id}', [BillsController::class, 'detailsSales']);
         });
@@ -61,12 +63,13 @@ Route::middleware(['auth'])->group(function () {
         });
 
         //Rate BCV
-        Route::put("changebcv/{id}", [RatesController::class, 'changeBCV']);
+        Route::put("changebcv", [RatesController::class, 'changeBCV']);
 
         //Products
         Route::middleware(['products'])->group(function () {
             Route::resource('/products', ProductsController::class);
             Route::get("products/search/list", [ProductsController::class, 'searchProduct']);
+            Route::get('export/products', [ProductsController::class, 'exportProductsPdf']);
         });
         Route::post('/sales/search', [SalesController::class, 'search']);
         Route::post('/shopping/list/search', [ShoppingController::class, 'search']);
@@ -84,11 +87,22 @@ Route::middleware(['auth'])->group(function () {
             // Reports table for products more sale
             Route::get('/reports-table/{year}/{month}', [ReportsController::class, 'productMoreSale']);
 
+            //Exportaciones a PDF de los reportes
+            Route::get('export/products-more-sale/{year}/{month}', [ReportsController::class, 'exportProductsMoreSale']);
+            Route::get('export/transaction/{year}/{month}', [ReportsController::class, 'exportTransactionsPdf']);
+            Route::get('export/operations-volume/{year}', [ReportsController::class, 'exportOperationsPdf']);
+           
+            // Export PDF: lista de providers/customers (filtrable)
+            Route::get('export/providers', [ProvidersController::class, 'exportProvidersPdf']);
+            Route::get('export/customers', [CustomersController::class, 'exportCustomersPdf']);
+
             // Reports charts
             Route::get('/reports-distribution/{year}/{month}', [ReportsController::class, 'distributionTransaction']);
 
             // pendiente
             Route::get('/reports-operations/{year}', [ReportsController::class, 'queryOperations']);
+            
+            
 
             //Stock
             Route::get('/stock', [StockController::class, 'index']);

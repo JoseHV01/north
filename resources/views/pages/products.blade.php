@@ -27,6 +27,9 @@
 				</div>
 
 				<div class="d-none col-md-7 d-md-flex justify-content-end">
+					<a href="{{ url('export/products') . (request()->getQueryString() ? '?' . request()->getQueryString() : '') }}" class="btn btn-primary m-1" title="Exportar">
+						<span><i class="ti ti-file-export"></i></span> Exportar 
+					</a>
 					<button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#modalAgg" data-toggle="tooltip" title="Agregar">
 						<span><i class="ti ti-plus"></i></span>
 					</button>

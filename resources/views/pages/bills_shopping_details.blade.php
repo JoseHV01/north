@@ -61,9 +61,9 @@
                         <tr>
                             <th>Producto</th>
                             <th>Cantidad</th>
-                            <th>Precio</th>
+                            <th>Precio (Bs)</th>
                             <th>% Ganancia</th>
-                            <th>Total</th>
+                            <th>Total (Bs)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,9 +71,9 @@
                             <tr>
                                 <td scope="row">{{ $product->description }}</td>
                                 <td>{{ $product->amount }}</td>
-                                <td>{{ $product->price }}</td>
-                                <td>{{ $product->percentaje }}</td>
-                                <td>{{ $product->amount*$product->price }}</td>
+                                <td>{{ floor(($product->price * floatval($shopping->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs</td>
+                                <td>{{ $product->percentaje }}%</td>
+                                <td>{{ floor(($product->amount * $product->price * floatval($shopping->bcv)) * pow(10, 2)) / pow(10, 2) }} Bs</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -81,7 +81,12 @@
             </div>
 
             <div class="row mt-5 mt-md-4">
-                <div class="col-12">
+                <div class="col-md-6 col-12">
+                    <div class="">
+                        <h5>B.C.V: &nbsp; {{ $shopping->bcv }} Bs</h5>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12">
                     <div class="d-flex justify-content-end">
                         <h5>Total Pagado: &nbsp; {{ $shopping->total }} Bs</h5>
                     </div>

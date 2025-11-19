@@ -68,26 +68,45 @@ class ShoppingController extends Controller
 
     public function store(ShoppingRequest $request)
     {
-        $totalBs = $request->input('totalShopping');
+        // Server-side validation: ensure payment amounts match the total (comparison in USD)
+        $totalUSD = floatval($request->input('totalShopping'));
         $amounts = $request->input('amounts', []);
-        $rate = DB::table('rates')->where('name', 'BCV')->first()->value ?? 0;
+        $rate = floatval($request->input('dollarRate', 0));
 
-        if(count($amounts) > 1){
-
-            $sum = 0;
+        if (count($amounts) >= 1) {
+            $sumUSD = 0.0;
             foreach ($amounts as $id => $amount) {
                 $shape = DB::table('shapes_payment')->where('id', $id)->first();
+                $shapeName = strtolower(trim($shape->name ?? ''));
 
-                if (str_contains(strtolower($shape->name), 'divisas') || str_contains(strtolower($shape->name), 'dolares') || str_contains(strtolower($shape->name), 'usd')) {
-                    $sum += $amount * $rate;
+                // If shape is 'divisas' (or explicitly USD), the input amount is already USD
+                if (str_contains($shapeName, 'divisas') || str_contains($shapeName, 'dolares') || str_contains($shapeName, 'usd')) {
+                    $sumUSD += floatval($amount);
                 } else {
-                    $sum += $amount;
+                    // Other methods: amount is entered in local currency, convert to USD using BCV
+                    if ($rate <= 0) {
+                        return back()->withErrors(['totalShopping' => 'No hay tasa BCV disponible para convertir montos a USD.'])->withInput();
+                    }
+                    $sumUSD += floatval($amount) / floatval($rate);
                 }
             }
-           
-            if (abs($sum - $totalBs) > 0.01) {
-                return back()->withErrors(['totalShopping' => 'La suma de los montos no coincide con el total.']);
+
+            if (abs($sumUSD - $totalUSD) > 0.01) {
+                return back()->withErrors(['totalShopping' => 'La suma (en USD) de los montos no coincide con el total.'])->withInput();
             }
+        }
+
+        // Validate product arrays lengths
+        $productIds = $request->input('product_id', []);
+        $quantities = $request->input('quantity', []);
+        $prices = $request->input('price', []);
+        $percentajes = $request->input('percentaje', []);
+
+        if (!is_array($productIds) || count($productIds) === 0) {
+            return back()->withErrors(['product_id' => 'Debe agregar al menos un producto.'])->withInput();
+        }
+        if (!(count($productIds) === count($quantities) && count($productIds) === count($prices) && count($productIds) === count($percentajes))) {
+            return back()->withErrors(['product_id' => 'Los arreglos de productos, cantidades, precios y porcentajes no concuerdan.'])->withInput();
         }
         
         DB::beginTransaction();

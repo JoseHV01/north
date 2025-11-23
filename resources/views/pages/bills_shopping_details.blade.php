@@ -88,7 +88,7 @@
                 </div>
                 <div class="col-md-6 col-12">
                     <div class="d-flex justify-content-end">
-                        <h5>Total Pagado: &nbsp; {{ $shopping->total }} Bs</h5>
+                        <h5>Total Pagado: &nbsp; {{ $shopping->total * $shopping->bcv }} Bs</h5>
                     </div>
                 </div>
             </div>

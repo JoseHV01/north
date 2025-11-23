@@ -118,8 +118,7 @@ class ShoppingController extends Controller
                 'total' => $request->totalShopping,
                 'invoice_number' => $request->invoiceNumber,
                 'control_number' => $request->controlNumber,
-                'date' => $request->date,
-                'created_at' => $request->date
+                'date' => $request->date
             ]);
 
             foreach ($amounts as $id => $amount) {

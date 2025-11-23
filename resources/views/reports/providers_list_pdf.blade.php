@@ -14,10 +14,21 @@
 <body>
     <div class="header">
         <h2>Listado de Clientes / Proveedores</h2>
-        @if(!empty($filters['provider']) || !empty($filters['type']))
-            <div>Filtros aplicados:
-                @if(!empty($filters['type'])) <strong>{{ $filters['type'] }}</strong> @endif
-                @if(!empty($filters['provider'])) - <strong>"{{ $filters['provider'] }}"</strong> @endif
+        @if(!empty($filters['provider']) || !empty($filters['type']) || !empty($filters['date_start']) || !empty($filters['date_end']))
+            <div style="font-size: 11px; color: #555;">
+                <strong>Filtros aplicados:</strong><br>
+                @if(!empty($filters['type'])) 
+                    Tipo: <strong>{{ $filters['type'] == 'provider' ? 'Proveedor' : ($filters['type'] == 'customer' ? 'Cliente' : $filters['type']) }}</strong><br>
+                @endif
+                @if(!empty($filters['provider'])) 
+                    Búsqueda: <strong>"{{ $filters['provider'] }}"</strong><br>
+                @endif
+                @if(!empty($filters['date_start'])) 
+                    Desde: <strong>{{ \Carbon\Carbon::parse($filters['date_start'])->format('d/m/Y') }}</strong>
+                @endif
+                @if(!empty($filters['date_end'])) 
+                    Hasta: <strong>{{ \Carbon\Carbon::parse($filters['date_end'])->format('d/m/Y') }}</strong>
+                @endif
             </div>
         @endif
     </div>

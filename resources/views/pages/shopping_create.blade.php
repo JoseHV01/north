@@ -7,19 +7,7 @@
 
             <form id="shoppingForm" action="{{ url('shopping') }}" method="POST">
                 {{ csrf_field() }}
-                <!-- Step indicators -->
-                <div class="mb-3">
-                    <nav aria-label="wizard">
-                        <ul class="list-inline d-flex justify-content-center">
-                            <li class="list-inline-item step-indicator active me-4" data-step="1"><button type="button"
-                                    class="btn rounded-pill btn-primary">1. Encabezado</button></li>
-                            <li class="list-inline-item step-indicator  me-4" data-step="2"><button type="button"
-                                    class="btn btn-outline-secondary rounded-pill">2. Productos</button></li>
-                            <li class="list-inline-item step-indicator me-4" data-step="3"><button type="button"
-                                    class="btn btn-outline-secondary rounded-pill">3. Pagos</button></li>
-                        </ul>
-                    </nav>
-                </div>
+
 
                 <!-- STEP 1: Encabezado (cliente y datos de factura) -->
                 <div id="step-1">
@@ -67,11 +55,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row mt-4">
-                        <div class="col-12 d-flex justify-content-end">
-                            <button type="button" id="step1Next" class="btn btn-primary" disabled>Siguiente</button>
-                        </div>
-                    </div>
+
                     <div id="step1Error" class="alert alert-danger d-none mt-3"></div>
                 </div>
 
@@ -87,11 +71,11 @@
                         </select>
                     </div>
                 </div>
-                <div id="step-2" class="d-none">
+                <div id="step-2">
                     <div class="mt-4 mb-5 row">
                         <div class="col-12 col-md-6 form-group">
                             <label class="form-label">Categoria</label>
-                            <select class="form-control" id="selectCategory" disabled>
+                            <select class="form-control" id="selectCategory">
                                 <option value="">- Seleccione -</option>
                                 @foreach ($categorys as $category)
                                     <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -101,8 +85,8 @@
                         <div class="col-12 col-md-6 form-group mb-4 mb-lg-0">
                             <label class="form-label">Producto</label>
                             <div class="input-group">
-                                <input id="search_product" type="text" class="form-control" min="1" disabled>
-                                <button id="btn_search" type="button" class="btn btn-primary" disabled>
+                                <input id="search_product" type="text" class="form-control" min="1">
+                                <button id="btn_search" type="button" class="btn btn-primary">
                                     <span><i class="ti ti-search"></i></span>
                                 </button>
                             </div>
@@ -148,14 +132,9 @@
                             </div>
 
                             <div id="step2Error" class="alert alert-danger d-none mt-3"></div>
-                            <div class="d-flex justify-content-between align-items-center mt-4 gap-3">
+                            <div class="d-flex justify-content-start align-items-center mt-4 gap-3">
                                 <div>
                                     <button type="button" class="btn btn-dark" onclick="cancelSale()">Cancelar</button>
-                                </div>
-                                <div>
-                                    <button type="button" id="step2Back" class="btn btn-secondary">Anterior</button>
-                                    <button type="button" id="step2Next" class="btn btn-primary"
-                                        disabled>Siguiente</button>
                                 </div>
                             </div>
                         </div>
@@ -163,7 +142,7 @@
                 </div>
 
                 <!-- STEP 3: Pagos y Resumen -->
-                <div id="step-3" class="d-none">
+                <div id="step-3">
                     <div class="row mt-4">
                         <div class="form-group col-12 col-md-6 col-lg-4 mb-4 mb-lg-0">
                             <label for="shopping_total" class="form-label">Total de la Compra</label>
@@ -200,26 +179,10 @@
                     </div>
                     <div id="shapePaymentAmounts" class="mt-4 mb-5 row d-none"></div>
 
-                    <div class="mt-4">
-                        <h6>Resumen de Productos</h6>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Cant.</th>
-                                        <th>Precio $</th>
-                                        <th>% Ganancia</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reviewResult"></tbody>
-                            </table>
-                        </div>
-                    </div>
+
 
                     <div id="paymentsError" class="alert alert-danger d-none mt-3"></div>
                     <div class="d-flex justify-content-end align-items-center mt-4 gap-3">
-                        <button type="button" id="step3Back" class="btn btn-secondary">Anterior</button>
                         <button id="submitBtn" type="submit" class="btn btn-success">Guardar Compra</button>
                     </div>
                 </div>
@@ -271,11 +234,7 @@
                 return parseFloat(dollarRate?.value || 0) || 0;
             }
 
-            const step1Next = document.getElementById('step1Next');
-            const step2Back = document.getElementById('step2Back');
-            const step2Next = document.getElementById('step2Next');
-            const step3Back = document.getElementById('step3Back');
-            const stepIndicators = document.querySelectorAll('.step-indicator');
+
 
             let listProducts = [],
                 productsSale = [],
@@ -294,48 +253,17 @@
             }).catch(() => {});
 
             // Navigation between steps
-            function goToStep(n) {
-                const steps = {
-                    1: document.getElementById('step-1'),
-                    2: document.getElementById('step-2'),
-                    3: document.getElementById('step-3')
-                };
-                Object.keys(steps).forEach(k => {
-                    if (steps[k]) steps[k].classList.add('d-none');
-                });
-                if (steps[n]) steps[n].classList.remove('d-none');
-                // Update step indicator li and inner button classes
-                stepIndicators.forEach(li => {
-                    const stepNum = Number(li.dataset.step);
-                    const isActive = stepNum === n;
-                    li.classList.toggle('active', isActive);
-                    const innerBtn = li.querySelector('button');
-                    if (innerBtn) {
-                        // remove any outline-primary leftover
-                        innerBtn.classList.remove('btn-outline-primary');
-                        if (isActive) {
-                            innerBtn.classList.add('btn-primary');
-                            innerBtn.classList.remove('btn-outline-secondary');
-                        } else {
-                            innerBtn.classList.remove('btn-primary');
-                            innerBtn.classList.add('btn-outline-secondary');
-                        }
-                    }
-                });
-                if (n === 3) {
-                    populateReview();
-                    recalcTotals();
-                }
-            }
+
 
             function evaluateValueSelects() {
+                
                 // header validation: bill, bill_number, shopping_date and provider
                 const billVal = bill && bill.value !== '';
                 const billNumVal = billNumber && billNumber.value !== '';
                 const dateVal = shoppingDate && shoppingDate.value !== '';
                 const providerVal = selectCustomer && selectCustomer.value !== '';
                 const ok = billVal && billNumVal && dateVal && providerVal;
-                if (step1Next) step1Next.disabled = !ok;
+                
                 // enable product search if header ok
                 if (ok) {
                     if (selectCategory) selectCategory.disabled = false;
@@ -350,12 +278,7 @@
             window.evaluateValueSelects = evaluateValueSelects;
 
             // Navigation listeners (use navigateToStep to enforce validations)
-            if (step1Next) step1Next.addEventListener('click', () => navigateToStep(2));
-            if (step2Back) step2Back.addEventListener('click', () => navigateToStep(1));
-            if (step2Next) step2Next.addEventListener('click', validateStep2ThenNext);
-            if (step3Back) step3Back.addEventListener('click', () => navigateToStep(2));
-            stepIndicators.forEach(btn => btn.addEventListener('click', () => navigateToStep(Number(btn.dataset
-            .step))));
+
 
             function isStep1Valid() {
                 const billVal = bill && bill.value !== '';
@@ -397,81 +320,12 @@
                 };
             }
 
-            function navigateToStep(target) {
-                // if target is 1 always allow
-                if (target === 1) {
-                    goToStep(1);
-                    return;
-                }
-                // require step1 valid for any target >=2
-                if (!isStep1Valid()) {
-                    const step1Error = document.getElementById('step1Error');
-                    if (step1Error) {
-                        step1Error.classList.remove('d-none');
-                        step1Error.textContent = 'Complete los datos del Encabezado antes de continuar.';
-                    }
-                    // focus first missing field
-                    if (bill && !bill.value) {
-                        bill.focus();
-                    } else if (billNumber && !billNumber.value) {
-                        billNumber.focus();
-                    } else if (shoppingDate && !shoppingDate.value) {
-                        shoppingDate.focus();
-                    } else if (selectCustomer && !selectCustomer.value) {
-                        selectCustomer.focus();
-                    }
-                    return;
-                } else {
-                    const step1Error = document.getElementById('step1Error');
-                    if (step1Error) {
-                        step1Error.classList.add('d-none');
-                        step1Error.textContent = '';
-                    }
-                }
 
-                // if going to step 3, validate step2 too
-                if (target === 3) {
-                    const res = isStep2Valid();
-                    if (!res.valid) {
-                        const step2Error = document.getElementById('step2Error');
-                        if (step2Error) {
-                            step2Error.classList.remove('d-none');
-                            step2Error.innerHTML = res.messages.join('<br>');
-                        }
-                        // focus first invalid product field if present
-                        if (productsSale.length > 0) {
-                            for (const id of productsSale) {
-                                if (parseFloat(document.getElementById('quantity' + id)?.value || 0) < 1) {
-                                    document.getElementById('quantity' + id).focus();
-                                    break;
-                                }
-                                if (parseFloat(document.getElementById('price' + id)?.value || 0) < 0.1) {
-                                    document.getElementById('price' + id).focus();
-                                    break;
-                                }
-                                if (parseFloat(document.getElementById('percentaje' + id)?.value || 0) < 1) {
-                                    document.getElementById('percentaje' + id).focus();
-                                    break;
-                                }
-                            }
-                        }
-                        return;
-                    } else {
-                        const step2Error = document.getElementById('step2Error');
-                        if (step2Error) {
-                            step2Error.classList.add('d-none');
-                            step2Error.innerHTML = '';
-                        }
-                    }
-                }
-
-                // all good
-                goToStep(target);
-            }
 
             // Search products
             if (btnSearch) btnSearch.addEventListener('click', searchProducts);
             if (selectCategory) selectCategory.addEventListener('change', () => {
+                
                 clearSearch();
                 resultsProducts = listProducts.filter(p => p.id_category == selectCategory.value);
                 visibleContainer('Categoria');
@@ -584,17 +438,17 @@
                 const percEl = document.getElementById('percentaje' + id);
                 if (qEl) qEl.addEventListener('input', () => {
                     recalcTotals();
-                    updateStep2NextState();
+
                 });
                 if (pEl) pEl.addEventListener('input', () => {
                     recalcTotals();
                     evaluatePaymentsSum();
                 });
                 if (percEl) percEl.addEventListener('input', () => {
-                    updateStep2NextState();
+
                 });
                 if (containerSale) containerSale.classList.remove('d-none');
-                updateStep2NextState();
+
             }
 
             window.removeProductOfList = function(idProduct) {
@@ -603,71 +457,11 @@
                 if (fila) fila.remove();
                 toggleProductBtn(idProduct, false);
                 if (productsSale.length === 0 && containerSale) containerSale.classList.add('d-none');
-                updateStep2NextState();
+
                 recalcTotals();
             };
 
-            function updateStep2NextState() {
-                if (!step2Next) return;
-                let enable = productsSale.length > 0;
-                let foundInvalidPercent = false;
-                productsSale.forEach(id => {
-                    const perc = parseFloat(document.getElementById('percentaje' + id)?.value || 0) || 0;
-                    if (perc < 1 || perc > 99) foundInvalidPercent = true;
-                });
-                if (foundInvalidPercent) enable = false;
-                step2Next.disabled = !enable;
-            }
 
-            function validateStep2ThenNext() {
-                const step2Error = document.getElementById('step2Error');
-                let valid = true;
-                const messages = [];
-                productsSale.forEach(id => {
-                    const q = parseFloat(document.getElementById('quantity' + id)?.value || 0) || 0;
-                    const p = parseFloat(document.getElementById('price' + id)?.value || 0) || 0;
-                    const perc = parseFloat(document.getElementById('percentaje' + id)?.value || 0) || 0;
-                    const prod = listProducts.find(pObj => pObj.id == id) || {};
-                    const name = prod.description || ('ID ' + id);
-                    if (q < 1) {
-                        valid = false;
-                        messages.push(`La cantidad de "${name}" debe ser al menos 1.`);
-                        document.getElementById('quantity' + id).classList.add('is-invalid');
-                    } else {
-                        document.getElementById('quantity' + id).classList.remove('is-invalid');
-                    }
-                    if (p < 0.1) {
-                        valid = false;
-                        messages.push(`El precio de "${name}" debe ser al menos 0.1.`);
-                        document.getElementById('price' + id).classList.add('is-invalid');
-                    } else {
-                        document.getElementById('price' + id).classList.remove('is-invalid');
-                    }
-                    if (perc < 1) {
-                        valid = false;
-                        messages.push(`El % Ganancia de "${name}" debe ser al menos 1.`);
-                        document.getElementById('percentaje' + id).classList.add('is-invalid');
-                    } else if (perc > 99) {
-                        valid = false;
-                        messages.push(`El % Ganancia de "${name}" no debe ser mayor a 99.`);
-                        document.getElementById('percentaje' + id).classList.add('is-invalid');
-                    } else {
-                        document.getElementById('percentaje' + id).classList.remove('is-invalid');
-                    }
-                });
-                if (!valid) {
-                    if (step2Error) {
-                        step2Error.classList.remove('d-none');
-                        step2Error.innerHTML = messages.join('<br>');
-                    }
-                    return false;
-                }
-                if (step2Error) {
-                    step2Error.classList.add('d-none');
-                    step2Error.innerHTML = '';
-                }
-                goToStep(3);
-            }
 
             function recalcTotals() {
                 let sum = 0;
@@ -680,20 +474,7 @@
             }
             window.recalcTotals = recalcTotals;
 
-            function populateReview() {
-                if (!reviewResult) return;
-                reviewResult.innerHTML = '';
-                productsSale.forEach(id => {
-                    const prod = listProducts.find(p => p.id == id) || {};
-                    const qty = document.getElementById('quantity' + id)?.value || '1';
-                    const price = document.getElementById('price' + id)?.value || '0.00';
-                    const percent = document.getElementById('percentaje' + id)?.value || '0';
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = '<td>' + (prod.description || 'N/A') + '</td><td>' + qty + '</td><td>' +
-                        price + '</td><td>' + percent + '</td>';
-                    reviewResult.appendChild(tr);
-                });
-            }
+
 
             // Payment inputs
             let paymentsOk = true;
@@ -704,9 +485,26 @@
                 const checked = Array.from(document.querySelectorAll('.shape-payment-checkbox:checked'));
                 const container = document.getElementById('shapePaymentAmounts');
                 const hiddenInput = document.getElementById('shapePaymentHidden');
+                const dropdownShapes = document.getElementById('dropdownShapes');
+
                 if (!container || !hiddenInput) return;
                 container.innerHTML = '';
                 hiddenInput.value = checked.map(cb => cb.value).join(',');
+
+                // Update dropdown placeholder
+                if (dropdownShapes) {
+                    if (checked.length > 0) {
+                        const names = checked.map(cb => {
+                            const paymentObj = (shapesPayments && shapesPayments.find && (shapesPayments.find(sp =>
+                                sp.id == cb.value) || {})) || {};
+                            return paymentObj.name || cb.parentNode.textContent.trim();
+                        });
+                        dropdownShapes.textContent = names.join(', ');
+                    } else {
+                        dropdownShapes.textContent = '- Seleccione -';
+                    }
+                }
+
                 if (checked.length > 0) {
                     container.classList.remove('d-none');
                     container.classList.add('row');
@@ -724,14 +522,72 @@
                             '" class="form-control payment-amount-input" min="0" step="0.01" required></div>';
                         container.appendChild(inputDiv);
                     });
+                    
+                    // Add suggestion element
+                    let suggestionEl = document.getElementById('paymentsSuggestion');
+                    if (!suggestionEl) {
+                        suggestionEl = document.createElement('div');
+                        suggestionEl.id = 'paymentsSuggestion';
+                        suggestionEl.className = 'text-muted small mt-2 col-12';
+                        container.appendChild(suggestionEl);
+                    }
+
                     // attach listeners
                     container.querySelectorAll('.payment-amount-input').forEach(inp => inp.addEventListener('input',
-                    () => evaluatePaymentsSum()));
+                        (e) => {
+                            calculatePaymentLogic(e.target);
+                            evaluatePaymentsSum();
+                        }));
+                        
+                    // Initial calculation
+                    calculatePaymentLogic(null);
                 } else {
                     container.classList.add('d-none');
                 }
                 // evaluate on change
                 evaluatePaymentsSum();
+            }
+
+            function calculatePaymentLogic(triggerInput) {
+                const totalUSD = parseFloat(shoppingTotalInput?.value || 0) || 0;
+                const rate = getDollarRate();
+                const inputs = Array.from(document.querySelectorAll('.payment-amount-input'));
+                const suggestionEl = document.getElementById('paymentsSuggestion');
+
+                // Identify Divisas input
+                const divisasInput = inputs.find(inp => {
+                    const name = (inp.dataset.shapeName || '').toLowerCase();
+                    return name.includes('divisa') || name.includes('dolar') || name.includes('usd');
+                });
+
+                // Scenario: Divisas + Others
+                if (divisasInput && inputs.length > 1) {
+                    // If user is typing in Divisas, or if we just initialized and want to distribute
+                    if (triggerInput === divisasInput || triggerInput === null) {
+                        const valDivisas = parseFloat(divisasInput.value || 0);
+                        const remainingUSD = Math.max(0, totalUSD - valDivisas);
+                        const remainingBs = remainingUSD * rate;
+
+                        // Find other inputs
+                        const otherInputs = inputs.filter(inp => inp !== divisasInput);
+                        // Auto-fill the first other input with the remainder in Bs
+                        if (otherInputs.length > 0) {
+                            otherInputs[0].value = remainingBs.toFixed(2);
+                        }
+                    }
+                    if (suggestionEl) suggestionEl.textContent = '';
+                } 
+                // Scenario: Only Non-Divisas (one or more)
+                else if (!divisasInput && inputs.length > 0) {
+                    const totalBs = totalUSD * rate;
+                    if (suggestionEl) {
+                        suggestionEl.textContent = `Total a pagar: $${totalUSD.toFixed(2)} ≈ Bs ${totalBs.toFixed(2)}`;
+                    }
+                }
+                // Scenario: Only Divisas
+                else if (divisasInput && inputs.length === 1) {
+                     if (suggestionEl) suggestionEl.textContent = '';
+                }
             }
 
             function evaluatePaymentsSum() {
@@ -790,26 +646,54 @@
             const shoppingForm = document.getElementById('shoppingForm');
             if (shoppingForm) {
                 shoppingForm.addEventListener('submit', function(e) {
-                    // evaluate one more time
+                    e.preventDefault();
+
+                    // 1. Validate Header
+                    if (!isStep1Valid()) {
+                         const step1Error = document.getElementById('step1Error');
+                         if(step1Error) {
+                            step1Error.classList.remove('d-none');
+                            step1Error.textContent = 'Complete los datos del Encabezado.';
+                         }
+                         document.getElementById('step-1').scrollIntoView({ behavior: 'smooth' });
+                         return;
+                    } else {
+                         const step1Error = document.getElementById('step1Error');
+                         if(step1Error) step1Error.classList.add('d-none');
+                    }
+
+                    // 2. Validate Products
+                    const prodVal = isStep2Valid();
+                    if (!prodVal.valid) {
+                        const step2Error = document.getElementById('step2Error');
+                        if (step2Error) {
+                            step2Error.classList.remove('d-none');
+                            step2Error.innerHTML = prodVal.messages.join('<br>');
+                        }
+                        document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                    } else {
+                         const step2Error = document.getElementById('step2Error');
+                         if(step2Error) step2Error.classList.add('d-none');
+                    }
+
+                    // 3. Validate Payments
                     const ok = evaluatePaymentsSum();
                     if (!ok) {
-                        e.preventDefault();
                         if (paymentsErrorEl) {
                             paymentsErrorEl.classList.remove('d-none');
-                            paymentsErrorEl.textContent =
-                                'No se puede enviar: la suma de los montos de pago no coincide con el total.';
-                            paymentsErrorEl.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
+                            paymentsErrorEl.textContent = 'La suma de los montos de pago no coincide con el total.';
                         }
-                        return false;
+                        return;
                     }
+
+                    this.submit();
                 });
             }
+            
 
             // initial step
-            goToStep(1);
+
         })();
     </script>
 @endsection

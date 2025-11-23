@@ -131,6 +131,8 @@ class ProvidersController extends Controller
         $q = trim((string) ($request->provider ?? $request->customer ?? ''));
         $qLower = $q !== '' ? mb_strtolower($q) : '';
         $type = $request->type ?? '';
+        $dateStart = $request->date_start;
+        $dateEnd = $request->date_end;
 
         // Providers query (mismo formato que en index)
         $providersQuery = DB::table('providers')
@@ -154,6 +156,12 @@ class ProvidersController extends Controller
             ->when($qLower, function ($builder) use ($qLower) {
                 // case-insensitive search
                 $builder->whereRaw('LOWER(providers.business_name) LIKE ?', ["%{$qLower}%"]);
+            })
+            ->when($dateStart, function ($builder) use ($dateStart) {
+                $builder->whereDate('providers.created_at', '>=', $dateStart);
+            })
+            ->when($dateEnd, function ($builder) use ($dateEnd) {
+                $builder->whereDate('providers.created_at', '<=', $dateEnd);
             });
 
         // Customers query (mismo formato que en index)
@@ -177,6 +185,12 @@ class ProvidersController extends Controller
             ->orderBy('customers.business_name', 'ASC')
             ->when($qLower, function ($builder) use ($qLower) {
                 $builder->whereRaw('LOWER(customers.business_name) LIKE ?', ["%{$qLower}%"]);
+            })
+            ->when($dateStart, function ($builder) use ($dateStart) {
+                $builder->whereDate('customers.created_at', '>=', $dateStart);
+            })
+            ->when($dateEnd, function ($builder) use ($dateEnd) {
+                $builder->whereDate('customers.created_at', '<=', $dateEnd);
             });
         // Aplicar filtro por tipo si se indica
         if ($type === 'provider') {
@@ -206,6 +220,8 @@ class ProvidersController extends Controller
         $q = trim((string) ($request->provider ?? ''));
         $qLower = $q !== '' ? mb_strtolower($q) : '';
         $type = $request->type ?? '';
+        $dateStart = $request->date_start;
+        $dateEnd = $request->date_end;
 
         // Providers query
         $providersQuery = DB::table('providers')
@@ -228,6 +244,12 @@ class ProvidersController extends Controller
             ->orderBy('providers.business_name', 'ASC')
             ->when($qLower, function ($builder) use ($qLower) {
                 $builder->whereRaw('LOWER(providers.business_name) LIKE ?', ["%{$qLower}%"]);
+            })
+            ->when($dateStart, function ($builder) use ($dateStart) {
+                $builder->whereDate('providers.created_at', '>=', $dateStart);
+            })
+            ->when($dateEnd, function ($builder) use ($dateEnd) {
+                $builder->whereDate('providers.created_at', '<=', $dateEnd);
             });
 
         // Customers query
@@ -251,6 +273,12 @@ class ProvidersController extends Controller
             ->orderBy('customers.business_name', 'ASC')
             ->when($qLower, function ($builder) use ($qLower) {
                 $builder->whereRaw('LOWER(customers.business_name) LIKE ?', ["%{$qLower}%"]);
+            })
+            ->when($dateStart, function ($builder) use ($dateStart) {
+                $builder->whereDate('customers.created_at', '>=', $dateStart);
+            })
+            ->when($dateEnd, function ($builder) use ($dateEnd) {
+                $builder->whereDate('customers.created_at', '<=', $dateEnd);
             });
 
         if ($type === 'provider') {
@@ -270,6 +298,8 @@ class ProvidersController extends Controller
             'filters' => [
                 'type' => $type,
                 'provider' => $q,
+                'date_start' => $dateStart,
+                'date_end' => $dateEnd,
             ],
         ];
 

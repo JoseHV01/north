@@ -396,4 +396,88 @@ class BillsController extends Controller
 
         return $shopping;
     }
+    public function ShoppingReports(){
+        // Obtiene las compras del día y las agrupa por método de pago
+        $raw = DB::table('purchases_invoices')
+        ->join('providers', 'providers.id', '=', 'purchases_invoices.id_provider')
+        ->leftJoin('document_types', 'document_types.id', '=', 'providers.id_document_type')
+        ->join('states_operation', 'states_operation.id', '=', 'purchases_invoices.id_state_operation')
+        ->join('purchases_invoice_shapes_payment as pisp', 'pisp.id_purchase_invoice', '=', 'purchases_invoices.id') 
+        ->join('shapes_payment', 'shapes_payment.id', '=', 'pisp.id_shape_payment') 
+        ->whereDate('purchases_invoices.created_at', '=', now()->toDateString())
+        ->select(
+            'purchases_invoices.*', 
+            'document_types.name as document_type', 
+            'providers.document', 
+            'providers.business_name', 
+            'states_operation.name as state',
+            'pisp.amount as amount_pay',
+            'shapes_payment.name as payment_shape'
+        )
+        ->orderBy('purchases_invoices.status', 'ASC')
+        ->orderBy('purchases_invoices.created_at', 'DESC')
+        ->get();
+        // Agrupar resultados por nombre del método de pago
+        $shoppingByShape = $raw->groupBy('payment_shape');
+        
+        $providers = DB::table('providers')->leftJoin('document_types', 'document_types.id', '=', 'providers.id_document_type')->where('status', 1)->orderBy('providers.business_name', 'ASC')->select('providers.id', 'providers.business_name')->get();
+
+        $extendLogsController = new LogsController();
+        $extendLogsController->insertLogOperations('Compras', 'Visualizacion de los reportes de compras');
+            
+        return view('pages/reports_shopping')->with('shoppingByShape', $shoppingByShape)->with('providers', $providers);
+    }
+
+    /**
+     * Exportar compras a PDF respetando filtros (provider, number_bills, start, end).
+     */
+    public function exportShoppingPdf(Request $request)
+    {
+        $params = [
+            'provider' => $request->provider ?? null,
+            'number_bills' => $request->number_bills ?? null,
+            'start' => $request->start ?? null,
+            'end' => $request->end ?? null,
+        ];
+
+        $shoppingQuery = DB::table('purchases_invoices')
+            ->join('providers', 'providers.id', '=', 'purchases_invoices.id_provider')
+            ->leftJoin('document_types', 'document_types.id', '=', 'providers.id_document_type')
+            ->join('states_operation', 'states_operation.id', '=', 'purchases_invoices.id_state_operation')
+            ->select('purchases_invoices.*', 'document_types.name as document_type', 'providers.document', 'providers.business_name', 'states_operation.name as state')
+            ->orderBy('purchases_invoices.created_at', 'DESC')
+            ->where(function($query) use ($params) {
+                if(!empty($params['provider'])){
+                    $query->where('providers.id', $params['provider']);
+                }
+
+                if(!empty($params['number_bills'])){
+                    $query->where('purchases_invoices.invoice_number', $params['number_bills']);
+                }
+
+                if(!empty($params['start'])){
+                    $query->whereDate('purchases_invoices.date', '>=', $params['start']);
+                }
+
+                if(!empty($params['end'])){
+                    $query->whereDate('purchases_invoices.date', '<=', $params['end']);
+                }
+
+                if(!empty($params['start']) && !empty($params['end'])){
+                    $query->whereDate('purchases_invoices.date', '>=', $params['start'])
+                    ->whereDate('purchases_invoices.date', '<=', $params['end']);
+                }
+            });
+
+        $shopping = $shoppingQuery->get();
+
+        $viewData = [
+            'shopping' => $shopping,
+            'filters' => $params,
+        ];
+
+        $pdf = Pdf::loadView('reports.shopping_list_pdf', $viewData)->setPaper('a4', 'portrait');
+        $filename = 'shopping_' . date('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
+    }
 }

@@ -52,6 +52,8 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('/shopping', ShoppingController::class);
             Route::get('/bills/shopping', [BillsController::class, 'shopping']);
             Route::get('/bills/shopping/{id}', [BillsController::class, 'detailsShopping']);
+            Route::get('report/shopping', [BillsController::class, 'ShoppingReports']);
+            Route::get('export/shopping', [BillsController::class, 'exportShoppingPdf']);
         });
 
         //Bills

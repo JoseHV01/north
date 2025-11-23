@@ -10,6 +10,12 @@
 
             <div class="col-6">
                 <div class="d-flex justify-content-end">
+                    <a role="button" class="btn btn-primary m-1" href="{{ url('export/shopping') . (request()->getQueryString() ? '?' . request()->getQueryString() : '') }}" data-toggle="tooltip" title="Exportar">
+                        <span><i class="ti ti-report"></i></span> Exportar
+                    </a>
+                    <a role="button" class="btn btn-primary m-1" href="{{ url('report/shopping') }}" data-toggle="tooltip" title="Agregar">
+                        <span><i class="ti ti-report"></i></span> Reporte Diario
+                    </a>
                     <a role="button" class="btn btn-primary m-1" href="{{ url('shopping/create') }}"
                         data-toggle="tooltip" title="Agregar">
                         <span><i class="ti ti-plus"></i></span>
@@ -18,7 +24,6 @@
             </div>
         </div>
 
-        @if(count($shopping) > 0)
             <form action="{{ url('bills/search/purchases') }}" method="get" class="row mt-4 mb-3">
                 <div class="form-group col-12 col-md-3 mb-3 mb-md-0">
                     <small class="form-label">Proveedor</small>
@@ -46,12 +51,12 @@
                 </div>
 
                 <div class="col-12 col-md-2 d-flex align-items-center pt-3">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary me-2">
                         <i class="ti ti-search"></i>
                     </button>
+                    <a href="{{ url('bills/shopping') }}" class="btn btn-outline-secondary" title="Limpiar filtros">Limpiar</a>
                 </div>
             </form>
-        @endif
 
         @if(count($shopping) > 0)
             <div class="table-responsive">
@@ -59,7 +64,8 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>N°</th>
+                            <th>N° Factura</th>
+                            <th>N° de Control</th>
                             <th>Proveedor</th>
                             {{-- <th>Operacion</th> --}}
                             <th>Estado</th>
@@ -73,8 +79,11 @@
                                 <td scope="row">
                                     {{ \Carbon\Carbon::parse($shop->date)->format("d/m/Y") }}
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     {{ $shop->invoice_number }}
+                                </td>
+                                <td class="text-center">
+                                    {{ $shop->control_number }}
                                 </td>
                                 <td>
                                     @if($shop->business_name == 'Sin Personalizar')

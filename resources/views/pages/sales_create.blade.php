@@ -7,18 +7,6 @@
 
             <form id="formSales" action="{{ url('sales') }}" method="POST">
                 {{ csrf_field() }}
-
-                <!-- Step indicators -->
-                <div class="mb-3">
-                    <nav aria-label="wizard">
-                        <ul class="list-inline d-flex justify-content-center">
-                            <li class="list-inline-item step-indicator active me-4" data-step="1"><button type="button" class="btn rounded-pill btn-primary">1. Cliente</button></li>
-                            <li class="list-inline-item step-indicator me-4" data-step="2"><button type="button" class="btn btn-outline-secondary rounded-pill">2. Productos</button></li>
-                            <li class="list-inline-item step-indicator me-4" data-step="3"><button type="button" class="btn btn-outline-secondary rounded-pill">3. Resumen</button></li>
-                        </ul>
-                    </nav>
-                </div>
-
                 <!-- STEP 1: Cliente -->
                 <div id="step-1">
                     <div class="row mt-4 gap-4 gap-md-0">
@@ -35,16 +23,10 @@
                         </div>
                         <input id="total_sales" type="hidden" name="totalSales" value="0">
                     </div>
-                    <div class="row mt-4">
-                        <div class="col-12 d-flex justify-content-end">
-                            <button type="button" id="step1Next" class="btn btn-primary" disabled>Siguiente</button>
-                        </div>
-                    </div>
                     <div id="step1Error" class="alert alert-danger d-none mt-3"></div>
                 </div>
-
                 <!-- STEP 2: Productos -->
-                <div id="step-2" class="d-none">
+                <div id="step-2">
                     <div class="my-4 row">
                         <div class="col-12 col-md-6 form-group mt-4 mt-md-0">
                             <label class="form-label">Categoria</label>
@@ -94,22 +76,13 @@
                                 </table>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-4 gap-3">
-                                <div>
-                                    <button type="button" class="btn btn-dark" onclick="cancelSale()">Cancelar</button>
-                                </div>
-                                <div>
-                                    <button type="button" id="step2Back" class="btn btn-secondary">Anterior</button>
-                                    <button type="button" id="step2Next" class="btn btn-primary" disabled>Siguiente</button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
                 <!-- STEP 3: Pagos y Resumen -->
-                <div id="step-3" class="d-none">
+                <div id="step-3">
                     <div class="row mt-4">
-                        <div class="form-group col-12 col-md-6 mb-4 mb-lg-0">
+                        <div class="form-group col-12 col-md-12 mb-4 mb-lg-0">
                             <label class="form-label">Forma de Pago</label>
                             <div class="dropdown">
                                 <span class="form-control w-100 text-start" type="button" id="dropdownShapes"
@@ -177,14 +150,14 @@
 
                     <input type="hidden" name="totalSale" id="totalSale">
                     <input type="hidden" name="taxBase" id="taxBase">
-                    <div class="d-flex justify-content-between align-items-center mt-4 gap-3">
-                        <button type="button" id="step3Back" class="btn btn-secondary">Anterior</button>
+                    <div class="d-flex justify-content-end align-items-center mt-4 gap-3">
                         <div>
                             <button type="button" class="btn btn-dark" onclick="cancelSale()">Cancelar</button>
                             <button type="submit" class="btn btn-primary" id="btn_save">Guardar</button>
                         </div>
                     </div>
                 </div>
+
             </form>
         </div>
     </div>
@@ -206,7 +179,8 @@
     </script>
     <script>
         listProducts = @php echo json_encode($products) @endphp;
-        const dollarRate = @json($rates->firstWhere('name', 'BCV')->value ?? 0);
+        // Ensure dollarRate is a number
+        const dollarRate = parseFloat(@json($rates->firstWhere('name', 'BCV')->value ?? 0)) || 0;
         const shapesPayments = @json($shapes_payments);
     </script>
     <script>
@@ -499,6 +473,7 @@
 
                 // Delegate payments validation to USD-based evaluator
                 try{ evaluatePaymentsSum(); }catch(e){ /* ignore */ }
+                try{ calculatePaymentLogic(null); }catch(e){ /* ignore */ }
             }
 
             // Evaluate payments sum in USD: convert non-divisas amounts (entered in Bs) to USD using dollarRate
@@ -610,75 +585,50 @@
                 const customerSelected = optionCustomer && parseInt(optionCustomer.value) > 0;
                 const statesOk = !optionStates || optionStates.value != 0;
 
-                // Enable step-1 Next when a customer is selected
-                const step1NextEl = document.getElementById('step1Next');
-                if(step1NextEl) step1NextEl.disabled = !customerSelected;
-
                 // Enable product selection once a customer is selected (do not require payment check here)
                 if (customerSelected && statesOk) {
                     selectCategory.disabled = false;
                     inputSearchProduct.disabled = false;
                     btnSearch.disabled = false;
-                    console.log('habilitado');
                 } else {
                     selectCategory.disabled = true;
                     inputSearchProduct.disabled = true;
                     btnSearch.disabled = true;
-                    console.log('deshabilitado');
                 }
 
                 caculateTotalSale();
             }
             window.evaluateValueSelects = evaluateValueSelects;
 
-            // --- Multi-step navigation (minimal, non-destructive) ---
-            const step1Next = document.getElementById('step1Next');
-            const step2Back = document.getElementById('step2Back');
-            const step2Next = document.getElementById('step2Next');
-            const step3Back = document.getElementById('step3Back');
-            const stepIndicators = document.querySelectorAll('.step-indicator');
-
-            function goToStep(n){
-                const steps = {1: document.getElementById('step-1'), 2: document.getElementById('step-2'), 3: document.getElementById('step-3')};
-                Object.keys(steps).forEach(k => { if(steps[k]) steps[k].classList.add('d-none'); });
-                if(steps[n]) steps[n].classList.remove('d-none');
-                stepIndicators.forEach(li => {
-                    const stepNum = Number(li.dataset.step);
-                    const isActive = stepNum === n;
-                    li.classList.toggle('active', isActive);
-                    const innerBtn = li.querySelector('button');
-                    if(innerBtn){
-                        innerBtn.classList.remove('btn-outline-primary');
-                        if(isActive){ innerBtn.classList.add('btn-primary'); innerBtn.classList.remove('btn-outline-secondary'); }
-                        else { innerBtn.classList.remove('btn-primary'); innerBtn.classList.add('btn-outline-secondary'); }
+            // --- Unified Form Validation on Submit ---
+            const formSales = document.getElementById('formSales');
+            if(formSales){
+                formSales.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    
+                    // 1. Validate Customer
+                    const customerSelected = optionCustomer && parseInt(optionCustomer.value) > 0;
+                    if(!customerSelected){
+                         const step1Error = document.getElementById('step1Error');
+                         if(step1Error){
+                            step1Error.classList.remove('d-none');
+                            step1Error.textContent = 'Seleccione un cliente antes de continuar.';
+                         }
+                         document.getElementById('step-1').scrollIntoView({ behavior: 'smooth' });
+                         return;
+                    } else {
+                         const step1Error = document.getElementById('step1Error');
+                         if(step1Error) step1Error.classList.add('d-none');
                     }
-                });
-            }
 
-            function isStep1Valid(){
-                try{ return parseInt(optionCustomer.value) > 0; }catch(e){ return false; }
-            }
-
-            function navigateToStep(target){
-                if(target === 1){ goToStep(1); return; }
-                if(!isStep1Valid()){
-                    const step1Error = document.getElementById('step1Error');
-                    if(step1Error){ step1Error.classList.remove('d-none'); step1Error.textContent = 'Seleccione un cliente antes de continuar.'; }
-                    if(optionCustomer && (!optionCustomer.value || parseInt(optionCustomer.value) === 0)) optionCustomer.focus();
-                    return;
-                } else {
-                    const step1Error = document.getElementById('step1Error'); if(step1Error){ step1Error.classList.add('d-none'); step1Error.textContent = ''; }
-                }
-
-                // when going to step 3 ensure there is at least one product and all have valid quantities
-                if(target === 3){
+                    // 2. Validate Products
                     const hasProducts = (productsSale && productsSale.length > 0) || (bodyTable && bodyTable.children.length > 0);
                     if(!hasProducts){
-                        alert('Agrega al menos un producto antes de continuar al resumen.');
+                        alert('Agrega al menos un producto antes de guardar.');
+                        document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
                         return;
                     }
-
-                    // Validate all products have quantity >= 0.5
+                    // Validate quantities
                     let invalidProducts = [];
                     productsSale.forEach(id => {
                         const quantityEl = document.getElementById('quantity' + id);
@@ -693,24 +643,22 @@
                             }
                         }
                     });
-
                     if(invalidProducts.length > 0){
                         alert('Los siguientes productos tienen cantidad inválida (mínimo 0.5):\n\n' + invalidProducts.join('\n'));
                         return;
                     }
-                }
 
-                goToStep(target);
+                    // 3. Validate Payments
+                    const paymentsOk = evaluatePaymentsSum();
+                    if(!paymentsOk){
+                        document.getElementById('container_error').classList.remove('d-none');
+                        document.getElementById('step-3').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                    }
+
+                    this.submit();
+                });
             }
-
-            if(step1Next) step1Next.addEventListener('click', () => navigateToStep(2));
-            if(step2Back) step2Back.addEventListener('click', () => navigateToStep(1));
-            if(step2Next) step2Next.addEventListener('click', () => navigateToStep(3));
-            if(step3Back) step3Back.addEventListener('click', () => navigateToStep(2));
-            stepIndicators.forEach(btn => btn.addEventListener('click', () => navigateToStep(Number(btn.dataset.step))));
-
-            // set initial step
-            goToStep(1);
 
             function updateShapePaymentInputs() {
                 const checked = Array.from(
@@ -718,53 +666,112 @@
                 );
                 const container = document.getElementById("shapePaymentAmounts");
                 const hiddenInput = document.getElementById("shapePaymentHidden");
+                const dropdownShapes = document.getElementById('dropdownShapes');
+
                 container.innerHTML = "";
                 hiddenInput.value = checked.map(cb => cb.value).join(",");
-                if (checked.length > 1) {
+
+                // Update dropdown placeholder
+                if (dropdownShapes) {
+                    if (checked.length > 0) {
+                        const names = checked.map(cb => {
+                            const paymentObj = (shapesPayments && shapesPayments.find && (shapesPayments.find(sp =>
+                                sp.id == cb.value) || {})) || {};
+                            return paymentObj.name || cb.parentNode.textContent.trim();
+                        });
+                        dropdownShapes.textContent = names.join(', ');
+                    } else {
+                        dropdownShapes.textContent = '- Seleccione -';
+                    }
+                }
+
+                if (checked.length > 0) {
                     container.classList = "mt-4 mb-5 row";
                     checked.forEach(cb => {
                         const paymentName =
                             shapesPayments.find(sp => sp.id == cb.value)?.name ||
                             cb.parentNode.textContent.trim();
+                        const safeName = String(paymentName).replace(/\"/g, '');
                         const inputDiv = document.createElement("div");
                         inputDiv.className = "col-12 col-md-4";
                         inputDiv.innerHTML = `
                     <div class="form-group">
                         <label class="form-label">${paymentName} - Monto</label>
-                        <input type="number" name="amounts[${cb.value}]" data-shape-id="${cb.value}" class="form-control payment-amount-input" min="0.01" step="0.01" required onkeyup="evaluateValueSelects()">
+                        <input type="number" name="amounts[${cb.value}]" data-shape-name="${safeName}" data-shape-id="${cb.value}" class="form-control payment-amount-input" min="0.01" step="0.01" required>
                     </div>`;
                         container.appendChild(inputDiv);
                     });
+                    
+                    // Add suggestion element
+                    let suggestionEl = document.getElementById('paymentsSuggestion');
+                    if (!suggestionEl) {
+                        suggestionEl = document.createElement('div');
+                        suggestionEl.id = 'paymentsSuggestion';
+                        suggestionEl.className = 'text-muted small mt-2 col-12';
+                        container.appendChild(suggestionEl);
+                    }
+
+                    // attach listeners
+                    container.querySelectorAll('.payment-amount-input').forEach(inp => inp.addEventListener('input',
+                        (e) => {
+                            calculatePaymentLogic(e.target);
+                            evaluatePaymentsSum();
+                        }));
+                        
+                    // Initial calculation
+                    calculatePaymentLogic(null);
+
                 } else {
                     container.classList = "d-none";
-                    checked.forEach(cb => {
-                        const paymentName =
-                            shapesPayments.find(sp => sp.id == cb.value)?.name ||
-                            cb.parentNode.textContent.trim();
-                        const inputDiv = document.createElement("div");
-                        inputDiv.className = "col-12 col-md-4";
-                        inputDiv.innerHTML = `
-                    <div class="form-group">
-                        <label class="form-label">${paymentName} - Monto</label>
-                        <input type="number" name="amounts[${cb.value}]" id="inputTotal" data-shape-id="${cb.value}" class="form-control payment-amount-input" min="0.01" step="0.01" required value="${TOTAL.textContent}" readonly>
-                    </div>`;
-                        container.appendChild(inputDiv);
-                    });
-
                 }
-                // attach listeners to newly created payment inputs to re-evaluate sums in USD
-                container.querySelectorAll('.payment-amount-input').forEach(inp => inp.addEventListener('input', () => { evaluatePaymentsSum(); computePaymentsSuggestion(); evaluateValueSelects(); }));
-                // ensure a suggestion element exists below the payments container
-                let suggestionEl = document.getElementById('paymentsSuggestion');
-                if(!suggestionEl){
-                    suggestionEl = document.createElement('div');
-                    suggestionEl.id = 'paymentsSuggestion';
-                    suggestionEl.className = 'text-muted small mt-2';
-                    container.parentNode.insertBefore(suggestionEl, container.nextSibling);
-                }
-                // run evaluation and suggestion after creating inputs
+                // evaluate on change
                 evaluatePaymentsSum();
-                computePaymentsSuggestion();
+            }
+
+            function calculatePaymentLogic(triggerInput) {
+                // Total is displayed in USD or Bs depending on context, but here we need USD total
+                // The TOTAL element displays the final total (including IGTF if applicable).
+                // We need to parse it.
+                const totalText = (TOTAL && TOTAL.textContent) ? TOTAL.textContent.replace(/[^0-9\.\-]/g,'') : '0';
+                const totalUSD = parseFloat(totalText) || 0;
+                const rate = dollarRate; // Use the global dollarRate constant
+                const inputs = Array.from(document.querySelectorAll('.payment-amount-input'));
+                const suggestionEl = document.getElementById('paymentsSuggestion');
+
+                // Identify Divisas input
+                const divisasInput = inputs.find(inp => {
+                    const name = (inp.dataset.shapeName || '').toLowerCase();
+                    return name.includes('divisa') || name.includes('dolar') || name.includes('usd');
+                });
+
+                // Scenario: Divisas + Others
+                if (divisasInput && inputs.length > 1) {
+                    // If user is typing in Divisas, or if we just initialized and want to distribute
+                    if (triggerInput === divisasInput || triggerInput === null) {
+                        const valDivisas = parseFloat(divisasInput.value || 0);
+                        const remainingUSD = Math.max(0, totalUSD - valDivisas);
+                        const remainingBs = remainingUSD * rate;
+
+                        // Find other inputs
+                        const otherInputs = inputs.filter(inp => inp !== divisasInput);
+                        // Auto-fill the first other input with the remainder in Bs
+                        if (otherInputs.length > 0) {
+                            otherInputs[0].value = remainingBs.toFixed(2);
+                        }
+                    }
+                    if (suggestionEl) suggestionEl.textContent = '';
+                } 
+                // Scenario: Only Non-Divisas (one or more)
+                else if (!divisasInput && inputs.length > 0) {
+                    const totalBs = totalUSD * rate;
+                    if (suggestionEl) {
+                        suggestionEl.textContent = `Total a pagar: $${totalUSD.toFixed(2)} ≈ Bs ${totalBs.toFixed(2)}`;
+                    }
+                }
+                // Scenario: Only Divisas
+                else if (divisasInput && inputs.length === 1) {
+                     if (suggestionEl) suggestionEl.textContent = '';
+                }
             }
 
             document.addEventListener("DOMContentLoaded", function() {

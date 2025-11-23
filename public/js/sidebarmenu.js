@@ -15,7 +15,7 @@ $(function () {
       ""
     );
     var element = $("ul#sidebarnav a").filter(function () {
-      return this.href === url || this.href === path; // || url.href.indexOf(this.href) === 0;
+      return this.href === url || this.href === path || url.indexOf(this.href) === 0;
     });
     element.parentsUntil(".sidebar-nav").each(function (index) {
       if ($(this).is("li") && $(this).children("a").length !== 0) {
@@ -49,4 +49,4 @@ $(function () {
     $("#sidebarnav >li >a.has-arrow").on("click", function (e) {
       e.preventDefault();
     });
-  });
+});

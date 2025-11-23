@@ -25,11 +25,11 @@
                                 {{ csrf_field() }}
 
                                <div class="row mb-3">
-                                    @include('pages.modals.providers.inputAddProvider')
+                                    @include('pages.modals.providers.inputAddProvider', ['prefix' => 'customer'])
                                     <div class="col-12 mb-3 mb-md-3">
                                         <div class="form-group form-check">
-                                            <input type="checkbox" value="1" class="form-check-input" id="inputRetentionAgent" name="retention_agent">
-                                            <label class="form-check-label" for="inputRetentionAgent" name="retention_agent">Agente de Retencion</label>
+                                            <input type="checkbox" value="1" class="form-check-input" id="inputRetentionAgent_customer" name="retention_agent">
+                                            <label class="form-check-label" for="inputRetentionAgent_customer" name="retention_agent">Agente de Retencion</label>
                                         </div>
                                     </div>
                                 </div>
@@ -44,11 +44,11 @@
                             <form method="POST" action="{{ url('providers') }}" autocomplete="off">
                                 {{ csrf_field() }}
                                 <div class="row mb-3"> 
-                                    @include('pages.modals.providers.inputAddProvider')
+                                    @include('pages.modals.providers.inputAddProvider', ['prefix' => 'provider'])
                                     <div class="form-group col-12 mb-3">
-                                        <label for="directionProvider" class="form-label">Domicilio Fiscal</label>
-                                        <input name="direction" type="text" class="form-control" id="aggDirectionProvider" value="{{ old('direction') }}" required>
-                                        <p class="text-danger small d-none" id="aggDirectionProviderMessage">El Domicilio Fiscal de contener minimo 10 caracteres</p>
+                                        <label for="aggDirectionProvider_provider" class="form-label">Domicilio Fiscal</label>
+                                        <input name="direction" type="text" class="form-control" id="aggDirectionProvider_provider" value="{{ old('direction') }}" required data-validate="direction">
+                                        <p class="text-danger small d-none validation-msg">El Domicilio Fiscal de contener minimo 10 caracteres</p>
                                     </div>
                                 </div>
                                 <div class="modal-footer pb-0">
